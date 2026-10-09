@@ -63,7 +63,7 @@ async function Sheet({ params }: Pick<PageProps<'/admin/comenzi/[id]/fisa'>, 'pa
             <div className="mt-6">
               <div className="font-mono text-[11px] uppercase tracking-[0.1em]">Rețetă {it.prescription ? `(${it.prescription.status === 'verified' ? 'verificată' : 'NEVERIFICATĂ'})` : '(lipsește)'}</div>
               <table className="mt-2 w-full border-collapse font-mono text-[15px]">
-                <thead><tr>{['', 'SPH', 'CYL', 'AX', 'ADD', 'PD'].map((h) => <th key={h} className="border border-ink px-3 py-2 text-left text-[12px]">{h}</th>)}</tr></thead>
+                <thead><tr>{['', 'SPH', 'CYL', 'AX', 'ADD', 'PD'].map((h) => <th key={h} scope="col" className="border border-ink px-3 py-2 text-left text-[12px]">{h}</th>)}</tr></thead>
                 <tbody>
                   {(['od', 'os'] as const).map((e) => (
                     <tr key={e}>

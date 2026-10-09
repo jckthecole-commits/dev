@@ -55,7 +55,7 @@ export const productInput = z
     description: z.string().trim().max(6000).optional(),
     highlights: z.array(z.string().trim().min(1).max(120)).max(8),
     features: z.array(z.string().trim().min(1).max(60)).max(12),
-    filterCategory: z.union([z.coerce.number().int().min(0).max(4), z.null()]).optional(),
+    filterCategory: z.union([z.null(), z.coerce.number().int().min(0).max(4)]).optional(),
     polarized: z.boolean(),
     price: lei.refine((v) => v > 0, 'Prețul este obligatoriu'),
     compareAtPrice: optLei,

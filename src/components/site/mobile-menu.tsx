@@ -1,17 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { Wordmark } from '@/components/brand'
 import { Icon } from '@/components/icons'
 
 export function MobileMenu({ nav }: { nav: { href: string; label: string }[] }) {
   const ref = useRef<HTMLDialogElement>(null)
-  const pathname = usePathname()
-  useEffect(() => {
-    ref.current?.close()
-  }, [pathname])
 
   return (
     <>
@@ -23,7 +18,8 @@ export function MobileMenu({ nav }: { nav: { href: string; label: string }[] }) 
         aria-label="Meniu"
         className="m-0 h-dvh max-h-none w-full max-w-none bg-fog p-0 backdrop:bg-ink/40 open:animate-[fadeup_.35s_var(--ease-out-expo)]"
         onClick={(e) => {
-          if (e.target === ref.current) ref.current?.close()
+          // backdrop click or any link inside → close (no pathname subscription, so the header stays static)
+          if (e.target === ref.current || (e.target as Element).closest('a')) ref.current?.close()
         }}
       >
         <div className="flex h-full flex-col px-5 pb-8 pt-3">

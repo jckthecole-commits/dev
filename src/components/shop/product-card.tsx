@@ -62,7 +62,7 @@ export function ProductCard({ product: p, initialVariant, eager }: { product: Ca
           </div>
         </div>
       </Link>
-      <div className="absolute right-3 top-3 opacity-100 transition-opacity lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
+      <div className="absolute right-3 top-3 z-10 opacity-100 transition-opacity lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
         <FavoriteButton slug={p.slug} name={p.name} />
       </div>
 

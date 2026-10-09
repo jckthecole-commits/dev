@@ -11,7 +11,7 @@ import { decryptBuffer, encryptBuffer } from '@/lib/crypto'
  * (prescriptions — always encrypted, never publicly addressable).
  */
 const driver = process.env.STORAGE_DRIVER === 's3' ? 's3' : 'local'
-const localRoot = path.resolve(process.env.STORAGE_DIR ?? './storage')
+const localRoot = path.resolve(/*turbopackIgnore: true*/ process.env.STORAGE_DIR ?? './storage')
 
 let s3: AwsClient | null = null
 function s3Client() {
@@ -26,7 +26,7 @@ function s3Client() {
 const s3Url = (key: string) => `${process.env.S3_ENDPOINT!.replace(/\/$/, '')}/${process.env.S3_BUCKET}/${key.split('/').map(encodeURIComponent).join('/')}`
 
 function safeLocalPath(key: string) {
-  const p = path.resolve(localRoot, key)
+  const p = path.resolve(/*turbopackIgnore: true*/ localRoot, key)
   if (!p.startsWith(localRoot + path.sep)) throw new Error('Invalid storage key')
   return p
 }
@@ -38,8 +38,8 @@ export async function putObject(key: string, body: Buffer, contentType: string) 
     return
   }
   const p = safeLocalPath(key)
-  await mkdir(path.dirname(p), { recursive: true })
-  await writeFile(p, body)
+  await mkdir(/*turbopackIgnore: true*/ path.dirname(p), { recursive: true })
+  await writeFile(/*turbopackIgnore: true*/ p, body)
 }
 
 export async function getObject(key: string): Promise<Buffer | null> {
@@ -50,7 +50,7 @@ export async function getObject(key: string): Promise<Buffer | null> {
     return Buffer.from(await res.arrayBuffer())
   }
   try {
-    return await readFile(safeLocalPath(key))
+    return await readFile(/*turbopackIgnore: true*/ safeLocalPath(key))
   } catch {
     return null
   }
@@ -61,7 +61,7 @@ export async function deleteObject(key: string) {
     await s3Client().fetch(s3Url(key), { method: 'DELETE' })
     return
   }
-  await unlink(safeLocalPath(key)).catch(() => {})
+  await unlink(/*turbopackIgnore: true*/ safeLocalPath(key)).catch(() => {})
 }
 
 const EXT: Record<string, string> = {

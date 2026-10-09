@@ -1,0 +1,65 @@
+# Local / single-server deployment: PostgreSQL + app + scheduled maintenance.
+# First run: scripts/docker-up.sh (starts the database, migrates, builds, starts).
+name: sifra-vision
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sifra
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sifra}
+      POSTGRES_DB: sifra
+    ports: ['127.0.0.1:5432:5432']
+    volumes: [db:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sifra -d sifra']
+      interval: 5s
+      retries: 20
+
+  tools:
+    profiles: [tools]
+    build:
+      context: .
+      target: tools
+      network: host
+      args:
+        DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@127.0.0.1:5432/sifra
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@db:5432/sifra
+    depends_on:
+      db: { condition: service_healthy }
+
+  app:
+    build:
+      context: .
+      target: runner
+      network: host
+      args:
+        DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@127.0.0.1:5432/sifra
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
+        NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@db:5432/sifra
+      STORAGE_DIR: /app/storage
+    ports: ['3000:3000']
+    volumes: [uploads:/app/storage]
+    depends_on:
+      db: { condition: service_healthy }
+
+  # Every 15 minutes: expire unpaid card orders, appointment reminders, cleanup.
+  cron:
+    image: curlimages/curl:8.11.1
+    restart: unless-stopped
+    env_file: [.env]
+    entrypoint: ['/bin/sh', '-c', 'while true; do sleep 900; curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/maintenance || true; echo; done']
+    depends_on: [app]
+
+volumes:
+  db:
+  uploads:

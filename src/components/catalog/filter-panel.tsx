@@ -1,7 +1,7 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { createContext, use, useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { createContext, use, useRef, useState, useTransition } from 'react'
 import { FrameArt } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
 import { cn } from '@/lib/cn'
@@ -222,15 +222,13 @@ export function FilterSidebar(props: { filters: CatalogFilters; facets: Facets; 
 
 export function FilterDrawerButton(props: { filters: CatalogFilters; facets: Facets; category: 'optical' | 'sun'; total: number }) {
   const ref = useRef<HTMLDialogElement>(null)
-  const pathname = usePathname()
   const n = activeFilterCount(props.filters)
-  useEffect(() => ref.current?.close(), [pathname])
   return (
     <>
       <button type="button" onClick={() => ref.current?.showModal()} className="btn btn-secondary btn-sm lg:hidden">
         <Icon name="sliders" size={18} /> Filtre{n ? ` (${n})` : ''}
       </button>
-      <dialog ref={ref} aria-label="Filtre" className="m-0 mt-auto max-h-[88dvh] w-full max-w-none rounded-t-[28px] bg-glass p-0" onClick={(e) => e.target === ref.current && ref.current?.close()}>
+      <dialog ref={ref} aria-label="Filtre" className="m-0 mt-auto max-h-[88dvh] w-full max-w-none rounded-t-[28px] bg-glass p-0" onClick={(e) => (e.target === ref.current || (e.target as Element).closest('a')) && ref.current?.close()}>
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-glass px-5 py-3">
           <span className="text-[17px] font-bold">Filtre</span>
           <button type="button" aria-label="Închide" onClick={() => ref.current?.close()} className="grid size-10 place-items-center rounded-full hover:bg-fog">

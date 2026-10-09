@@ -24,7 +24,10 @@
     "db:studio": "drizzle-kit studio",
     "admin:create": "tsx scripts/create-admin.ts",
     "postinstall": "node scripts/vendor.mjs",
-    "prebuild": "node scripts/vendor.mjs"
+    "prebuild": "node scripts/vendor.mjs",
+    "db:seed:demo": "tsx scripts/seed.ts --demo",
+    "db:reset:demo": "tsx scripts/reset.ts && pnpm db:migrate && pnpm db:seed:demo",
+    "check": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible-mono": "^5.3.0",

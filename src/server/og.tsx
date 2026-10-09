@@ -20,6 +20,8 @@ const FILES = [
   ['Atkinson', 700, 'atkinson-hyperlegible-next', 'atkinson-hyperlegible-next-latin-700-normal.woff'],
   ['Atkinson', 700, 'atkinson-hyperlegible-next', 'atkinson-hyperlegible-next-latin-ext-700-normal.woff'],
   ['Atkinson Mono', 400, 'atkinson-hyperlegible-mono', 'atkinson-hyperlegible-mono-latin-400-normal.woff'],
+  ['Atkinson Mono', 400, 'atkinson-hyperlegible-mono', 'atkinson-hyperlegible-mono-latin-ext-400-normal.woff'],
+  ['Mona Sans', 300, 'mona-sans', 'mona-sans-latin-ext-300-normal.woff'],
 ] as const
 
 let cache: Promise<{ name: string; data: Buffer; weight: 300 | 400 | 700 | 800; style: 'normal' }[]> | null = null
