@@ -227,13 +227,13 @@ export function frameMaterial(swatch: Swatch, part: 'rim' | 'temple' = 'rim', op
     return new THREE.MeshPhysicalMaterial({ color: swatch.primary, transparent: true, opacity: 0.58, roughness: 0.04, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.02, specularIntensity: 1, envMapIntensity: 1.4, depthWrite: false })
   if (swatch.kind === 'crystal')
     return new THREE.MeshPhysicalMaterial({
-      color: lighten(swatch.primary, 0.25),
-      transmission: 0.82,
-      thickness: 3.5,
-      roughness: 0.14,
+      color: lighten(swatch.primary, 0.5),
+      transmission: 0.9,
+      thickness: 3,
+      roughness: 0.08,
       ior: 1.49,
       attenuationColor: new THREE.Color(swatch.primary),
-      attenuationDistance: 5,
+      attenuationDistance: 12,
       clearcoat: 1,
       clearcoatRoughness: 0.05,
     })

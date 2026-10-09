@@ -70,6 +70,7 @@ export default async function ProductPage({ params }: Pick<PageProps<'/rame/[slu
     filterCategory: p.filterCategory,
     polarized: p.polarized,
     art: artOf(p),
+    knuckles: Number(p.features.map((f) => /(\d+)\s*butoia/i.exec(f)?.[1]).find(Boolean) ?? 0) || null,
     images: p.images.map((i) => ({ key: i.key, alt: i.alt, variantId: i.variantId })),
     variants: variants.map(({ ean: _e, ...v }) => v),
     sizes: p.sizes,

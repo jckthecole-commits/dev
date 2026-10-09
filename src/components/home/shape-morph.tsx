@@ -256,7 +256,7 @@ export function ShapeMorph({ shapes }: { shapes: MorphShape[] }) {
                 </span>
               </p>
             </div>
-            <Link href={s.href} className="btn btn-ink btn-sm shrink-0 self-start sm:self-auto">
+            <Link data-magnetic href={s.href} className="btn btn-ink btn-sm shrink-0 self-start sm:self-auto">
               Vezi {s.count} {s.count === 1 ? 'ramă' : 'rame'}
               <Icon name="arrow-right" size={16} />
             </Link>

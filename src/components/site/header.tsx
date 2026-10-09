@@ -80,7 +80,7 @@ export async function SiteHeader({ overlay = true }: { overlay?: boolean }) {
             </Link>
             <Suspense
               fallback={
-                <Link href="/cos" aria-label="Coș" className="inline-flex size-11 items-center justify-center rounded-full text-ink">
+                <Link href="/cos" data-cart-icon aria-label="Coș" className="inline-flex size-11 items-center justify-center rounded-full text-ink">
                   <Icon name="bag" />
                 </Link>
               }

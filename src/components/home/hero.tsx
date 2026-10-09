@@ -362,11 +362,11 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
             Rame moderne, ușoare și confortabile, create pentru fiecare zi. Le probezi pe față din telefon, vezi prețul cu lentile pe loc și le ridici din Galați.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/proba-virtuala" className="btn btn-primary max-lg:flex-1">
+            <Link data-magnetic href="/proba-virtuala" className="btn btn-primary max-lg:flex-1">
               <Icon name="camera" size={20} />
               Probează virtual
             </Link>
-            <Link href="/rame-de-vedere" className="btn btn-secondary max-lg:flex-1">
+            <Link data-magnetic href="/rame-de-vedere" className="btn btn-secondary max-lg:flex-1">
               Vezi ramele
             </Link>
           </div>

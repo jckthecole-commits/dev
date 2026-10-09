@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useState, useTransition, ViewTransition } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition, ViewTransition } from 'react'
 import { addToCart } from '@/app/actions/cart'
 import { FrameArt, type FrameArtProduct } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
@@ -10,7 +10,11 @@ import { FavoriteButton } from '@/components/shop/favorite-button'
 import { cn } from '@/lib/cn'
 import type { Swatch } from '@/lib/db/schema'
 import { formatFrameSize, formatPrice } from '@/lib/format'
+import { flyToCart } from '@/lib/fly-to-cart'
+import type { FrameSpec } from '@/lib/frame-geometry'
 import { swatchCss } from '@/lib/product-art'
+import { noSubscribe, webglServerSnapshot, webglSnapshot } from '@/lib/webgl'
+import type { ViewerEngine } from '@/components/three/viewer-engine'
 
 export type PdpVariant = { id: string; sku: string; colorName: string; colorSlug: string; swatch: Swatch; priceDelta: number; stock: { showroom: number; warehouse: number } }
 export type PdpProduct = {
@@ -33,6 +37,8 @@ export type PdpProduct = {
   filterCategory: number | null
   polarized: boolean
   art: FrameArtProduct
+  /** Hinge knuckles when the product states them — modelled in the 3D view. */
+  knuckles: number | null
   images: { key: string; alt: string; variantId: string | null }[]
   variants: PdpVariant[]
   sizes: { slug: string; name: string; lensWidth: number; bridgeWidth: number; templeLength: number }[]
@@ -46,12 +52,69 @@ export function ProductViewWithParams(props: { product: PdpProduct; productionDa
 export function ProductView({ product: p, initialColor, productionDays }: { product: PdpProduct; initialColor?: string | null; productionDays: string }) {
   const [vid, setVid] = useState(() => (p.variants.find((v) => v.colorSlug === initialColor) ?? p.variants[0]!).id)
   const v = p.variants.find((x) => x.id === vid) ?? p.variants[0]!
-  const [view, setView] = useState<'front' | 'photo'>('front')
+  const [view, setView] = useState<'3d' | 'front' | 'photo' | null>(null)
+  const galleryRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const engineRef = useRef<ViewerEngine | null>(null)
+  const swatchRef = useRef(v.swatch)
+  const canGl = useSyncExternalStore(noSubscribe, webglSnapshot, webglServerSnapshot)
+  const [gl, setGl] = useState(false)
+  const [spun, setSpun] = useState(false)
+  const [folded, setFolded] = useState(false)
+  // the 3D view takes over once it's ready, unless a view was picked by hand
+  const shown = view ?? (gl ? '3d' : 'front')
   const [pending, start] = useTransition()
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const photos = p.images.filter((i) => !i.variantId || i.variantId === v.id)
   const price = p.price + v.priceDelta
   const total = v.stock.showroom + v.stock.warehouse
+
+  useEffect(() => {
+    swatchRef.current = v.swatch
+    engineRef.current?.setSwatch(v.swatch)
+  }, [v.swatch])
+  useEffect(() => {
+    engineRef.current?.setFolded(folded)
+  }, [folded])
+
+  // 360° viewer: three.js loads once the gallery is on screen and the page is idle
+  useEffect(() => {
+    if (!canGl) return
+    let engine: ViewerEngine | null = null
+    let cancelled = false
+    const io = new IntersectionObserver(([en]) => {
+      if (!en?.isIntersecting) return
+      io.disconnect()
+      const go = async () => {
+        try {
+          const { startViewerEngine } = await import('@/components/three/viewer-engine')
+          if (cancelled || !canvasRef.current) return
+          engine = await startViewerEngine({
+            canvas: canvasRef.current,
+            spec: p.art as FrameSpec,
+            swatch: swatchRef.current,
+            templeLength: p.templeLength,
+            knuckles: p.knuckles ?? undefined,
+            onReady: () => setGl(true),
+            onInteract: () => setSpun(true),
+          })
+          if (cancelled) engine.dispose()
+          else engineRef.current = engine
+        } catch {
+          // no WebGL after all — the drawn front view stays
+        }
+      }
+      if ('requestIdleCallback' in window) window.requestIdleCallback(() => void go(), { timeout: 1500 })
+      else setTimeout(() => void go(), 300)
+    })
+    io.observe(galleryRef.current!)
+    return () => {
+      cancelled = true
+      io.disconnect()
+      engine?.dispose()
+      engineRef.current = null
+    }
+  }, [canGl, p.art, p.templeLength, p.knuckles])
 
   const choose = (id: string) => {
     setVid(id)
@@ -65,6 +128,7 @@ export function ProductView({ product: p, initialColor, productionDays }: { prod
       fd.set('variantId', v.id)
       fd.set('config', JSON.stringify({ lensType: 'none', treatments: [] }))
       const r = await addToCart(fd)
+      if (r.ok) flyToCart(galleryRef.current?.querySelector('[data-fly]'))
       setMsg(r.ok ? { ok: true, text: 'Adăugat în coș.' } : { ok: false, text: r.error })
     })
 
@@ -72,29 +136,53 @@ export function ProductView({ product: p, initialColor, productionDays }: { prod
     <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
       {/* gallery */}
       <div className="lg:sticky lg:top-[calc(var(--header-h)+16px)] lg:self-start">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-glass ring-1 ring-line-soft ring-inset">
-          {view === 'photo' && photos[0] ? (
+        <div ref={galleryRef} className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-glass ring-1 ring-line-soft ring-inset">
+          {shown === 'photo' && photos[0] ? (
             <img src={`/media/${photos[0].key.replace(/^public\//, '')}`} alt={photos[0].alt || p.name} className="absolute inset-0 h-full w-full object-cover" />
           ) : (
-            <div className="absolute inset-0 grid place-items-center">
+            <div className={cn('absolute inset-0 grid place-items-center transition-opacity duration-700', shown === '3d' && 'opacity-0')}>
               <ViewTransition name={`frame-${p.slug}`}>
-                <div className="w-[84%]">
+                <div data-fly className="w-[84%]">
                   <FrameArt product={p.art} swatch={v.swatch} shadow className="h-auto w-full" title={`${p.name}, ${v.colorName}, vedere din față`} />
                 </div>
               </ViewTransition>
             </div>
           )}
-          <div className="absolute left-4 top-4 flex gap-2">
+          {canGl ? (
+            <canvas
+              ref={canvasRef}
+              tabIndex={shown === '3d' ? 0 : -1}
+              aria-hidden={shown !== '3d'}
+              aria-label={`${p.name}, ${v.colorName}, în 3D. Trage sau folosește săgețile ca s-o rotești; dublu clic o readuce din față.`}
+              className={cn('absolute inset-0 h-full w-full cursor-grab touch-pan-y outline-none transition-opacity duration-700 focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-inset active:cursor-grabbing', shown === '3d' ? 'opacity-100' : 'pointer-events-none opacity-0')}
+            />
+          ) : null}
+          <div className="pointer-events-none absolute left-4 top-4 flex gap-2">
             {p.badge ? <span className="rounded-full bg-paper px-3 py-1 font-mono text-[11px] uppercase tracking-[0.1em] ring-1 ring-line-soft">{p.badge}</span> : null}
-            <span className="rounded-full bg-paper/80 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-graphite backdrop-blur">randare la scară</span>
+            <span className="rounded-full bg-paper/80 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-graphite backdrop-blur">{shown === '3d' ? '3D · la scară' : 'randare la scară'}</span>
           </div>
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+          {shown === '3d' ? (
+            <div className="absolute right-4 top-4 flex items-center gap-3">
+              <span aria-hidden className={cn('hidden font-mono text-[11px] uppercase tracking-[0.14em] text-graphite transition-opacity duration-700 sm:inline', spun && 'opacity-0')}>
+                <span className="inline-block animate-[nudge_1.6s_var(--ease-in-out-soft)_infinite]">↔</span> Trage ca s-o rotești
+              </span>
+              <button type="button" onClick={() => setFolded((f) => !f)} aria-pressed={folded} className="rounded-full bg-paper/85 px-3.5 py-1.5 text-[13px] font-bold ring-1 ring-line backdrop-blur hover:ring-ink">
+                {folded ? 'Deschide brațele' : 'Pliază brațele'}
+              </button>
+            </div>
+          ) : null}
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2">
             <div className="flex gap-2">
-              <button type="button" onClick={() => setView('front')} aria-pressed={view === 'front'} className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-bold ring-1', view === 'front' ? 'bg-ink text-fog ring-ink' : 'bg-paper ring-line')}>
+              {gl ? (
+                <button type="button" onClick={() => setView('3d')} aria-pressed={shown === '3d'} className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-bold ring-1', shown === '3d' ? 'bg-ink text-fog ring-ink' : 'bg-paper ring-line')}>
+                  3D
+                </button>
+              ) : null}
+              <button type="button" onClick={() => setView('front')} aria-pressed={shown === 'front'} className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-bold ring-1', shown === 'front' ? 'bg-ink text-fog ring-ink' : 'bg-paper ring-line')}>
                 Față
               </button>
               {photos.length ? (
-                <button type="button" onClick={() => setView('photo')} aria-pressed={view === 'photo'} className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-bold ring-1', view === 'photo' ? 'bg-ink text-fog ring-ink' : 'bg-paper ring-line')}>
+                <button type="button" onClick={() => setView('photo')} aria-pressed={shown === 'photo'} className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-bold ring-1', shown === 'photo' ? 'bg-ink text-fog ring-ink' : 'bg-paper ring-line')}>
                   Foto
                 </button>
               ) : null}
@@ -171,7 +259,7 @@ export function ProductView({ product: p, initialColor, productionDays }: { prod
         </dl>
 
         <div className="mt-8 flex flex-col gap-3">
-          <Link href={`/configurator/${p.slug}?culoare=${v.colorSlug}`} className="btn btn-primary btn-lg w-full">
+          <Link data-magnetic href={`/configurator/${p.slug}?culoare=${v.colorSlug}`} className="btn btn-primary btn-lg w-full">
             {p.category === 'sun' ? 'Vreau cu dioptrii' : 'Alege lentilele'} <Icon name="arrow-right" size={20} />
           </Link>
           <div className="flex gap-3">

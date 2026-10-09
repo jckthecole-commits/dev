@@ -27,7 +27,7 @@ export function ProductCard({ product: p, initialVariant, eager }: { product: Ca
       <Link href={href} className="relative block no-underline" aria-label={`${p.name}, ${v.colorName}, ${formatPrice(p.price + v.priceDelta)}`}>
         <div
           ref={box}
-          className="relative aspect-[5/4] overflow-hidden rounded-[var(--radius-card)] bg-glass ring-1 ring-line-soft ring-inset transition-shadow duration-300 group-hover:shadow-[var(--shadow-lift)]"
+          className="card-glint relative aspect-[5/4] overflow-hidden rounded-[var(--radius-card)] bg-glass ring-1 ring-line-soft ring-inset transition-shadow duration-300 group-hover:shadow-[var(--shadow-lift)]"
           onPointerMove={(e) => {
             if (e.pointerType !== 'mouse' || p.image) return
             const r = box.current!.getBoundingClientRect()

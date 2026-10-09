@@ -6,6 +6,7 @@ import { FrameArt, type FrameArtProduct } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
 import type { Swatch } from '@/lib/db/schema'
 import type { FrameSpec } from '@/lib/frame-geometry'
+import { noSubscribe, webglServerSnapshot, webglSnapshot } from '@/lib/webgl'
 import type { AnatomyEngine } from '@/components/three/anatomy-engine'
 
 export type AnatomyData = {
@@ -67,21 +68,6 @@ function cardsOf(d: AnatomyData): Card[] {
   ]
 }
 
-function canRunGl() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
-  if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return false
-  try {
-    const c = document.createElement('canvas')
-    return !!(c.getContext('webgl2') || c.getContext('webgl'))
-  } catch {
-    return false
-  }
-}
-
-let glCapable: boolean | null = null
-const glSnapshot = () => (glCapable ??= canRunGl())
-const noSubscribe = () => () => {}
-
 export function AnatomySection({ data }: { data: AnatomyData }) {
   const sectionRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -91,7 +77,7 @@ export function AnatomySection({ data }: { data: AnatomyData }) {
   const dotRef = useRef<SVGGElement>(null)
   const dimLines = useRef<(SVGPathElement | null)[]>([])
   const dimTexts = useRef<(SVGTextElement | null)[]>([])
-  const canGl = useSyncExternalStore(noSubscribe, glSnapshot, () => false)
+  const canGl = useSyncExternalStore(noSubscribe, webglSnapshot, webglServerSnapshot)
   const [failed, setFailed] = useState(false)
   const mode = canGl && !failed ? 'gl' : 'static'
   const [ready, setReady] = useState(false)
@@ -221,7 +207,7 @@ export function AnatomySection({ data }: { data: AnatomyData }) {
             Tot ce ai văzut, pe cântar. {data.name} în {data.colorName.toLowerCase()}, {data.price}.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href={`/rame/${data.slug}`} onFocus={revealFinal} className="btn btn-primary">
+            <Link data-magnetic href={`/rame/${data.slug}`} onFocus={revealFinal} className="btn btn-primary">
               Vezi {data.name}
               <Icon name="arrow-right" size={18} />
             </Link>

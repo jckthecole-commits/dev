@@ -10,6 +10,7 @@ import { LensSection } from '@/components/shop/lens-section'
 import { cn } from '@/lib/cn'
 import type { LineConfiguration, Swatch } from '@/lib/db/schema'
 import { formatDelta, formatFrameSize, formatPrice } from '@/lib/format'
+import { flyToCart } from '@/lib/fly-to-cart'
 import { dominantPower, estimateThickness, formatDiopter, recommendIndex, validateRx, type EyeRx, type IndexCode, type RxValues } from '@/lib/optics'
 import { availableIndices, availableLensTypes, availableTreatments, lensTypeLabel, normalizeConfiguration, priceConfiguration, type LensCatalog, type VatRates } from '@/lib/pricing'
 import { swatchCss } from '@/lib/product-art'
@@ -139,7 +140,10 @@ export function Configurator({ frame, catalog, vat, initialColor, productionDays
       if (needsRx && rxMode === 'manual') fd.set('rx', JSON.stringify({ ...rx, notes: notes || undefined }))
       if (needsRx && rxMode === 'upload' && file) fd.set('rxFile', file)
       const r = await addToCart(fd)
-      if (r.ok) router.push('/cos?adaugat=1')
+      if (r.ok) {
+        flyToCart(document.querySelector('[data-fly]'))
+        router.push('/cos?adaugat=1')
+      }
       else setError(r.error)
     })
   }
@@ -448,7 +452,7 @@ export function Configurator({ frame, catalog, vat, initialColor, productionDays
       <aside className="lg:sticky lg:top-24 lg:self-start" aria-label="Rezumat">
         <div className="card bg-glass p-5">
           <div className="grid aspect-[16/9] place-items-center rounded-2xl bg-paper ring-1 ring-line-soft">
-            <div className="w-[82%]">
+            <div data-fly className="w-[82%]">
               <FrameArt product={frame.art} swatch={v.swatch} shadow className="h-auto w-full" />
             </div>
           </div>
