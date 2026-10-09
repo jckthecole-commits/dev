@@ -1,13 +1,14 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionForm } from '@/lib/use-action-form'
+import { useState } from 'react'
 import { submitReview } from '@/app/actions/reviews'
 import { Icon } from '@/components/icons'
 
 export function ReviewForm({ productId, productName }: { productId: string; productName: string }) {
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(5)
-  const [state, action, pending] = useActionState(submitReview, null)
+  const [state, onSubmit, pending] = useActionForm(submitReview, null)
   if (state?.ok) return <p className="mt-6 flex items-center gap-2 rounded-xl bg-ok-50 p-4 text-[14.5px] text-ok"><Icon name="check" size={18} /> {state.message}</p>
   if (!open)
     return (
@@ -16,7 +17,7 @@ export function ReviewForm({ productId, productName }: { productId: string; prod
       </button>
     )
   return (
-    <form action={action} className="mt-6 flex flex-col gap-3">
+    <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
       <input type="hidden" name="productId" value={productId} />
       <input type="hidden" name="rating" value={rating} />
       <input type="text" name="website" className="hidden" tabIndex={-1} autoComplete="off" aria-hidden />

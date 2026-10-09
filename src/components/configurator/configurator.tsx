@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { addToCart } from '@/app/actions/cart'
 import { FrameArt, type FrameArtProduct } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
@@ -85,6 +85,16 @@ export function Configurator({ frame, catalog, vat, initialColor, productionDays
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // PD measured in the virtual try-on is offered automatically
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('sv:pd') ?? 'null') as { value: number; at: number } | null
+      if (saved && Date.now() - saved.at < 1000 * 60 * 60 * 24 * 30 && saved.value >= 50 && saved.value <= 80) setRx((r) => ({ ...r, pd: { mode: 'single', value: Math.round(saved.value * 2) / 2 } }))
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   const rxEntered = needsRx && rxMode === 'manual' && (rx.od.sph !== 0 || rx.os.sph !== 0 || rx.od.cyl !== 0 || rx.os.cyl !== 0)
   const recommended = recommendIndex(rxEntered ? rx : null, { rim: frame.rim, lensWidth: frame.lensWidth }, lensType) as string

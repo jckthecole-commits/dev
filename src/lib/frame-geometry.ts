@@ -323,6 +323,8 @@ export type FrameRenderOptions = {
   glass?: boolean
   /** Override viewBox (e.g. shared scale across a grid) */
   viewBox?: [number, number, number, number]
+  /** Near-transparent glass & faint reflections (virtual try-on on a face) */
+  subtle?: boolean
 }
 
 export function buildFrameSvg(spec: FrameSpec, swatch: Swatch, opts: FrameRenderOptions = {}): SvgNode {
@@ -424,13 +426,13 @@ export function buildFrameSvg(spec: FrameSpec, swatch: Swatch, opts: FrameRender
       defs.push({
         t: 'linearGradient',
         a: { id: glassId, x1: 0, y1: 0, x2: 0.3, y2: 1 },
-        c: [stop(0, '#FFFFFF', 0.42), stop(0.55, '#E9EEF2', 0.16), stop(1, '#5A6FE0', 0.1)],
+        c: opts.subtle ? [stop(0, '#FFFFFF', 0.1), stop(0.6, '#E9EEF2', 0.03), stop(1, '#5A6FE0', 0.06)] : [stop(0, '#FFFFFF', 0.42), stop(0.55, '#E9EEF2', 0.16), stop(1, '#5A6FE0', 0.1)],
       })
     }
     defs.push({
       t: 'linearGradient',
       a: { id: specId, x1: 0, y1: 0, x2: 1, y2: 0 },
-      c: [stop(0, '#FFFFFF', 0), stop(0.5, '#FFFFFF', isSun ? 0.32 : 0.75), stop(1, '#FFFFFF', 0)],
+      c: [stop(0, '#FFFFFF', 0), stop(0.5, '#FFFFFF', opts.subtle ? 0.16 : isSun ? 0.32 : 0.75), stop(1, '#FFFFFF', 0)],
     })
     defs.push({ t: 'clipPath', a: { id: clipId }, c: [{ t: 'use', a: { href: `#${lensPathId}`, transform: right } }, { t: 'use', a: { href: `#${lensPathId}`, transform: left } }] })
     g.push({ t: 'use', a: { href: `#${lensPathId}`, transform: right, fill: `url(#${glassId})` } })

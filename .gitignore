@@ -27,3 +27,4 @@ coverage/
 !.vscode/extensions.json
 .idea/
 .tmp/
+public/vendor/mediapipe/wasm/

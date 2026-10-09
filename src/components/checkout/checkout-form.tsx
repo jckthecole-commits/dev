@@ -1,7 +1,8 @@
 'use client'
 
+import { useActionForm } from '@/lib/use-action-form'
 import Link from 'next/link'
-import { useActionState, useState } from 'react'
+import { useState } from 'react'
 import { checkout } from '@/app/actions/checkout'
 import { FrameArt, type FrameArtProduct } from '@/components/frame-art'
 import { Icon, type IconName } from '@/components/icons'
@@ -34,7 +35,7 @@ type Ship = 'courier' | 'easybox' | 'pickup'
 type Pay = 'card' | 'cod' | 'transfer' | 'store'
 
 export function CheckoutForm(p: CheckoutProps) {
-  const [state, action, pending] = useActionState(checkout, null)
+  const [state, onSubmit, pending] = useActionForm(checkout, null)
   const [ship, setShip] = useState<Ship>(p.shipping.courier.enabled ? 'courier' : p.shipping.easybox.enabled ? 'easybox' : 'pickup')
   const [pay, setPay] = useState<Pay>(p.payments.card ? 'card' : 'cod')
   const [billing, setBilling] = useState<'person' | 'company'>('person')
@@ -61,7 +62,7 @@ export function CheckoutForm(p: CheckoutProps) {
   ]
 
   return (
-    <form action={action} noValidate className="grid gap-10 lg:grid-cols-[1fr_420px] lg:gap-14">
+    <form onSubmit={onSubmit} noValidate className="grid gap-10 lg:grid-cols-[1fr_420px] lg:gap-14">
       <input type="hidden" name="shippingMethod" value={ship} />
       <input type="hidden" name="paymentMethod" value={effectivePay} />
       <input type="hidden" name="billingType" value={billing} />
