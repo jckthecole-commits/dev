@@ -1,14 +1,17 @@
 import Link from 'next/link'
 import { FrameArt } from '@/components/frame-art'
 import { Icon, type IconName } from '@/components/icons'
-import { SHAPE_ICON_SPEC } from '@/components/site/header'
 import { ProductCard } from '@/components/shop/product-card'
-import { SHAPES } from '@/lib/catalog-filters'
 import type { ProductCard as Card } from '@/lib/catalog-query'
 import { formatDate } from '@/lib/format'
 import type { StoreSettings } from '@/lib/settings-schema'
 import { WEEKDAYS_RO } from '@/lib/settings-schema'
 import { OpenNow } from './open-now'
+
+/** "Rame care se poartă *toată ziua.*" → the starred part set in the Bodoni italic accent. */
+export function rich(text: string) {
+  return text.split(/\*(.+?)\*/g).map((part, i) => (i % 2 ? <em key={i}>{part}</em> : part))
+}
 
 export function SectionHead({ eyebrow, title, intro, action, id }: { eyebrow?: string; title: string; intro?: string; action?: { href: string; label: string }; id?: string }) {
   return (
@@ -16,7 +19,7 @@ export function SectionHead({ eyebrow, title, intro, action, id }: { eyebrow?: s
       <div className="max-w-3xl">
         {eyebrow ? <div className="eyebrow mb-3">{eyebrow}</div> : null}
         <h2 id={id} className="disp focus-reveal text-[clamp(34px,4.6vw,60px)]">
-          {title}
+          {rich(title)}
         </h2>
         {intro ? <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-ink-2">{intro}</p> : null}
       </div>
@@ -56,39 +59,6 @@ export function TrustStrip({ settings }: { settings: StoreSettings }) {
   )
 }
 
-export function ShapeBrowser({ counts }: { counts: Record<string, number> }) {
-  return (
-    <section aria-labelledby="forme" className="container-x py-24">
-      <SectionHead id="forme" eyebrow="Rame de vedere" title="Caută după formă." intro="Forma ramei schimbă proporțiile feței mai mult decât culoarea. Începe de aici." />
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {SHAPES.map((s, i) => (
-          <li key={s.value} className="focus-rise" style={{ animationDelay: `${i * 40}ms` }}>
-            <Link
-              href={`/rame-de-vedere?forma=${s.slug}`}
-              className="group relative flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-[var(--radius-card)] bg-glass p-5 no-underline ring-1 ring-line-soft ring-inset transition-[background-color,box-shadow] duration-300 hover:bg-paper hover:shadow-[var(--shadow-lift)]"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[16px] font-bold">{s.plural}</span>
-                <span className="spec">{counts[s.value] ?? 0}</span>
-              </div>
-              <div className="grid flex-1 place-items-center">
-                <FrameArt
-                  product={SHAPE_ICON_SPEC(s.value)}
-                  swatch={{ kind: 'solid', primary: '#0D1216' }}
-                  mode="rim"
-                  rimColor="#0D1216"
-                  className="h-auto w-[78%] transition-[filter,transform] duration-500 ease-[var(--ease-out-expo)] group-hover:scale-105 group-hover:blur-0 group-focus-visible:blur-0 [@media(hover:hover)]:blur-[3px]"
-                />
-              </div>
-              <Icon name="arrow-up-right" size={18} className="absolute bottom-5 right-5 -translate-x-1 translate-y-1 opacity-0 transition-all group-hover:translate-0 group-hover:opacity-100" />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
 export function Collection({ products, title, eyebrow, href, label }: { products: Card[]; title: string; eyebrow: string; href: string; label: string }) {
   return (
     <section aria-label={title} className="container-x py-12">
@@ -112,7 +82,7 @@ export function HowItWorks() {
   ]
   return (
     <section aria-labelledby="cum" className="container-x py-24">
-      <SectionHead id="cum" eyebrow="Fără drum la optician" title="Cum comanzi ochelari de vedere." />
+      <SectionHead id="cum" eyebrow="Fără drum la optician" title="Cum comanzi ochelari *de vedere.*" />
       <ol className="grid gap-4 md:grid-cols-3">
         {steps.map((s) => (
           <li key={s.n} className="focus-rise card flex flex-col p-7">
@@ -139,7 +109,7 @@ export function TryOnPromo({ frame }: { frame: Card }) {
           <h2 id="proba" className="disp focus-reveal mt-4 text-[clamp(38px,5.2vw,72px)]">
             Probezi pe fața ta.
             <br />
-            La mărimea reală.
+            <em>La mărimea reală.</em>
           </h2>
           <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-fog/75">
             Camera telefonului găsește 478 de puncte pe față și folosește diametrul irisului ca riglă. Rama apare la dimensiunea ei reală, în milimetri — iar distanța pupilară o măsori pe loc, pentru comandă.
@@ -201,7 +171,7 @@ export function Showroom({ settings }: { settings: StoreSettings }) {
           <h2 id="showroom" className="disp focus-reveal mt-3 text-[clamp(34px,4.6vw,60px)]">
             Vino să le vezi
             <br />
-            în lumină naturală.
+            <em>în lumină naturală.</em>
           </h2>
           <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-ink-2">
             Probezi toată colecția, măsurăm PD-ul și înălțimea de montaj, faci consultația optometrică și ridici comanda ajustată pe fața ta.
@@ -295,7 +265,7 @@ export function B2BBand() {
             <h2 id="b2b" className="disp mt-4 text-[clamp(34px,4.4vw,58px)]">
               Distribuim ramele SIFRA
               <br />
-              în toată România.
+              <em>în toată România.</em>
             </h2>
           </div>
           <div>
@@ -326,7 +296,7 @@ export function B2BBand() {
 export function JournalTeaser({ posts }: { posts: { slug: string; title: string; excerpt: string | null; category: string | null; readingMinutes: number | null; publishedAt: Date | null }[] }) {
   return (
     <section aria-labelledby="jurnal" className="container-x py-24">
-      <SectionHead id="jurnal" eyebrow="Jurnal" title="Ghiduri scrise de oameni care măsoară ochi." action={{ href: '/jurnal', label: 'Toate ghidurile' }} />
+      <SectionHead id="jurnal" eyebrow="Jurnal" title="Ghiduri scrise de oameni *care măsoară ochi.*" action={{ href: '/jurnal', label: 'Toate ghidurile' }} />
       <ul className="grid gap-5 md:grid-cols-3">
         {posts.map((p, i) => (
           <li key={p.slug} className="focus-rise">

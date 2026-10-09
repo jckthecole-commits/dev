@@ -23,7 +23,7 @@ export default async function LensesPage() {
         <p className="mt-6 max-w-2xl text-[18px] text-ink-2">Lucrăm cu producători certificați și montăm în laboratorul nostru din Galați. Toate prețurile de mai jos se adaugă la prețul ramei — fără costuri ascunse.</p>
       </section>
       <section className="container-x py-20">
-        <SectionHead eyebrow="Tipuri" title="Ce lentile ți se potrivesc?" />
+        <SectionHead eyebrow="Tipuri" title="Ce lentile *ți se potrivesc?*" />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {c.types.filter((t) => t.active && t.code !== 'none').map((t) => (
             <div key={t.code} className="card flex flex-col p-6">
@@ -36,11 +36,11 @@ export default async function LensesPage() {
         </div>
       </section>
       <section className="container-x py-10">
-        <SectionHead eyebrow="Grosime" title="Indicele de refracție, pe înțeles." intro="Mută dioptria și vezi cât de groasă iese marginea lentilei pe fiecare indice." action={{ href: '/jurnal/indicele-de-refractie-lentile-subtiate', label: 'Ghid complet' }} />
+        <SectionHead eyebrow="Grosime" title="Indicele de refracție, *pe înțeles.*" intro="Mută dioptria și vezi cât de groasă iese marginea lentilei pe fiecare indice." action={{ href: '/jurnal/indicele-de-refractie-lentile-subtiate', label: 'Ghid complet' }} />
         <ThicknessLab indices={c.indices.filter((i) => i.active).map((i) => ({ code: i.code, name: i.name, price: i.price }))} />
       </section>
       <section className="container-x py-20">
-        <SectionHead eyebrow="Tratamente" title="Ce poți adăuga." />
+        <SectionHead eyebrow="Tratamente" title="Ce poți *adăuga.*" />
         <ul className="divide-y divide-line border-y border-line">
           {c.treatments.filter((t) => t.active).map((t) => (
             <li key={t.code} className="grid gap-2 py-5 sm:grid-cols-[1fr_2fr_auto] sm:items-center">

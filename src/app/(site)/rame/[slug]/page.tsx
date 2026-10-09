@@ -192,7 +192,7 @@ export default async function ProductPage({ params }: Pick<PageProps<'/rame/[slu
 
       {related.length ? (
         <section aria-label="Rame similare" className="mt-28">
-          <SectionHead eyebrow="Din aceeași familie de forme" title="Poate îți plac și acestea." action={{ href: base, label: 'Toate modelele' }} />
+          <SectionHead eyebrow="Din aceeași familie de forme" title="Poate îți plac *și acestea.*" action={{ href: base, label: 'Toate modelele' }} />
           <div className="grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((r) => (
               <ProductCard key={r.id} product={r} />

@@ -1115,3 +1115,109 @@
     font-size: 104px;
   }
 }
+
+/* ── Shape morph ─────────────────────────────────────────────────────────── */
+.morph-svg {
+  overflow: visible;
+  --rim: 3.2;
+}
+.morph-lens {
+  fill: rgb(13 18 22 / 0.035);
+  stroke: var(--color-ink);
+  stroke-width: calc(var(--rim) * 1px);
+  stroke-linejoin: round;
+}
+.morph-rim {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: calc(var(--rim) * 1px);
+  stroke-linecap: round;
+}
+.morph-dim {
+  fill: none;
+  stroke: var(--color-cobalt);
+  stroke-width: 0.35px;
+}
+.morph-num {
+  fill: var(--color-cobalt);
+  font-family: var(--font-mono);
+  font-size: 3.4px;
+  letter-spacing: 0.02em;
+}
+.morph-name {
+  font-stretch: 100%;
+}
+@media (max-width: 639px) {
+  .morph-num {
+    font-size: 4.6px;
+  }
+  .morph-dim {
+    stroke-width: 0.5px;
+  }
+}
+.morph-row {
+  display: grid;
+  grid-template-columns: 1fr auto 22px;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-mist);
+  text-decoration: none;
+  transition: color 0.35s;
+}
+.morph-list {
+  border-top: 1px solid var(--color-line);
+  align-self: center;
+}
+.morph-row-name {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 2.5vw, 36px);
+  font-weight: 720;
+  font-stretch: 92%;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  transition:
+    font-stretch 0.6s var(--ease-out-expo),
+    letter-spacing 0.6s var(--ease-out-expo);
+}
+.morph-row[data-on] {
+  color: var(--color-ink);
+}
+.morph-row[data-on] .morph-row-name {
+  font-stretch: 125%;
+  letter-spacing: -0.01em;
+}
+.morph-row-arrow {
+  opacity: 0;
+  transform: translate(-6px, 6px);
+  transition:
+    opacity 0.3s,
+    transform 0.5s var(--ease-out-expo);
+}
+.morph-row[data-on] .morph-row-arrow {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .morph-name {
+    animation: stretch-in 0.9s var(--ease-out-expo) both;
+  }
+  .morph-intro {
+    animation: focus-in-soft 0.6s var(--ease-out-soft) both;
+  }
+}
+@keyframes stretch-in {
+  from {
+    font-stretch: 125%;
+    letter-spacing: 0.03em;
+    filter: blur(10px);
+    opacity: 0;
+  }
+  to {
+    font-stretch: 100%;
+    letter-spacing: -0.02em;
+    filter: blur(0);
+    opacity: 1;
+  }
+}

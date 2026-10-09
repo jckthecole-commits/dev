@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
 import { AnatomySection, type AnatomyData } from '@/components/home/anatomy'
 import { HeroFocus, type HeroFrame } from '@/components/home/hero'
-import { B2BBand, Collection, FaqList, HowItWorks, JournalTeaser, SectionHead, ShapeBrowser, Showroom, TrustStrip, TryOnPromo } from '@/components/home/sections'
+import { B2BBand, Collection, FaqList, HowItWorks, JournalTeaser, SectionHead, Showroom, TrustStrip, TryOnPromo } from '@/components/home/sections'
+import { ShapeMorph, type MorphShape } from '@/components/home/shape-morph'
 import { ThicknessLab } from '@/components/home/thickness-lab'
+import { SHAPES } from '@/lib/catalog-filters'
+import { OPTICAL_LANDINGS } from '@/lib/catalog-landings'
 import { artOf } from '@/lib/product-art'
 import { JsonLd } from '@/components/seo/json-ld'
 import { formatFrameSize, formatPrice } from '@/lib/format'
@@ -43,6 +46,21 @@ export default async function HomePage() {
   }
   const anatomy = anatomyOf(all.find((p) => p.slug === 'mira-52') ?? optical.find((p) => p.material === 'acetat'))
   const shapeCounts = optical.reduce<Record<string, number>>((acc, p) => ((acc[p.shape] = (acc[p.shape] ?? 0) + 1), acc), {})
+  const morphShapes = SHAPES.flatMap((sh): MorphShape[] => {
+    const ex = optical.find((p) => p.shape === sh.value)
+    if (!ex) return []
+    const landing = OPTICAL_LANDINGS.find((l) => l.preset.shape?.length === 1 && l.preset.shape[0] === sh.value)
+    return [
+      {
+        value: sh.value,
+        plural: sh.plural,
+        href: landing ? `/rame-de-vedere/${landing.slug}` : `/rame-de-vedere?forma=${sh.slug}`,
+        count: shapeCounts[sh.value] ?? 0,
+        intro: landing?.intro ?? SHAPE_NOTES[sh.value] ?? '',
+        example: { name: ex.name, href: `/rame/${ex.slug}`, spec: artOf(ex) },
+      },
+    ]
+  })
   const featured = optical.filter((p) => p.featured).concat(optical.filter((p) => !p.featured)).slice(0, 8)
   const tryOnFrame = optical.find((p) => p.slug === 'iris-49') ?? optical[1]!
 
@@ -51,15 +69,15 @@ export default async function HomePage() {
       <JsonLd data={[opticianLd(settings), faqLd(faqs.slice(0, 8))]} />
       <HeroFocus frames={heroFrames} />
       <TrustStrip settings={settings} />
-      <ShapeBrowser counts={shapeCounts} />
-      <Collection products={featured} eyebrow="Colecția SIFRA" title="Rame care se poartă toată ziua." href="/rame-de-vedere" label="Vezi toate ramele" />
+      <ShapeMorph shapes={morphShapes} />
+      <Collection products={featured} eyebrow="Colecția SIFRA" title="Rame care se poartă *toată ziua.*" href="/rame-de-vedere" label="Vezi toate ramele" />
       {anatomy ? <AnatomySection data={anatomy} /> : null}
 
       <section aria-labelledby="pret" className="container-x py-24">
         <SectionHead
           id="pret"
           eyebrow="Prețul complet, pe loc"
-          title="Știi cât de groasă iese lentila. Înainte să plătești."
+          title="Știi cât de groasă iese lentila. *Înainte să plătești.*"
           intro="Mutăm dioptria și vedem secțiunea reală a lentilei pe fiecare indice. Nu vindem „cel mai subțire” din reflex — doar ce se vede diferit pe fața ta."
         />
         <ThicknessLab indices={lenses.indices.filter((i) => i.active).map((i) => ({ code: i.code, name: i.name, price: i.price }))} />
@@ -67,13 +85,20 @@ export default async function HomePage() {
 
       <TryOnPromo frame={tryOnFrame} />
       <HowItWorks />
-      <Collection products={sun.slice(0, 4)} eyebrow="Ochelari de soare" title="Numiți după locurile unde îi porți." href="/ochelari-de-soare" label="Toți ochelarii de soare" />
+      <Collection products={sun.slice(0, 4)} eyebrow="Ochelari de soare" title="Numiți după locurile *unde îi porți.*" href="/ochelari-de-soare" label="Toți ochelarii de soare" />
       <Showroom settings={settings} />
       <B2BBand />
       <JournalTeaser posts={posts.slice(0, 3)} />
       <FaqList faqs={faqs.slice(0, 8)} />
     </>
   )
+}
+
+/** Shapes without their own landing page still get one honest line. */
+const SHAPE_NOTES: Record<string, string> = {
+  pilot: 'Forma de aviator: linie dreaptă sus, lentila coboară spre nas.',
+  browline: 'Sprânceană groasă deasupra, fir subțire dedesubt — privirea vine în față.',
+  geometric: 'Hexagoane și unghiuri tăiate, pentru o ramă care se observă.',
 }
 
 /** Exploded-view data for one frame — every number comes from the product sheet or the optics engine. */
