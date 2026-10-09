@@ -11,7 +11,9 @@ Magazin online, configurator de lentile, probă virtuală, programări, portal B
 **Pentru clienți**
 
 - **Catalog cu dimensiuni reale.** Fiecare ramă are lățimea lentilei, puntea, brațul și înălțimea lentilei. Filtrele merg pe formă, material, tip de ramă, lățimea feței și pe milimetri exacți („am o ramă 52□18 145, arată-mi ceva asemănător”).
-- **Desen la scară 1:1.** Ramele sunt desenate procedural din dimensiunile lor (SVG, 1 unitate = 1 mm). Același desen apare în carduri, în hero-ul 3D, în configurator, în proba virtuală, în imaginile de partajare și în feed-ul Google. Fotografiile reale, când există, au prioritate.
+- **Desen la scară 1:1.** Ramele sunt desenate procedural din dimensiunile lor (SVG, 1 unitate = 1 mm). Același desen apare în carduri, în configurator, în proba virtuală, în imaginile de partajare și în feed-ul Google. Fotografiile reale, când există, au prioritate.
+- **Rame în 3D, din aceleași milimetri** (three.js, `src/components/three/`): în hero, optotipul neclar devine clar prin lentile (shader de lentilă în spațiul ecranului), rama se rotește cu mouse-ul, cu degetul sau cu giroscopul; secțiunea „Anatomia ramei” desface rama la scroll, cu cote din fișa produsului și grosimi de lentilă din motorul optic; pe pagina de produs, vizualizare 360° cu lentile de sticlă refractive și brațe care se pliază. three.js se încarcă doar după primul paint și doar unde e nevoie; fără WebGL, cu *reduce motion* sau *Save-Data* rămân versiunile SVG/statice.
+- **Forme care se transformă:** „Caută după formă” trece fluid între conturul real al câte unei rame din fiecare formă, cu cotele A, B și puntea animate.
 - **Configurator de lentile:** tip (monofocale / progresive / office / fără dioptrii) → indice (1.50–1.74, cu recomandare automată după dioptrie și estimarea grosimii marginii) → tratamente (cu grupuri exclusive) → rețetă (completată, încărcată ca poză/PDF sau trimisă mai târziu). Prețul complet se vede înainte de coș.
 - **Probă virtuală în browser** (MediaPipe Face Landmarker, găzduit local): rama apare la mărimea ei reală pe față (scara vine din diametrul irisului, 11,7 mm) și măsoară distanța pupilară, preluată automat în configurator.
 - **Checkout** cu curier, easybox sau ridicare din showroom; plată cu card (Netopia API v2 sau Stripe), ramburs, transfer sau la ridicare. Consimțământ separat pentru date medicale (GDPR art. 9).
@@ -37,7 +39,8 @@ Magazin online, configurator de lentile, probă virtuală, programări, portal B
 | Date | PostgreSQL 15+, Drizzle ORM, migrații în `drizzle/` |
 | Autentificare | Better Auth (e-mail + parolă, opțional Google) |
 | Stil | Tailwind CSS v4, tokeni în `src/app/globals.css` |
-| Fonturi | Mona Sans (titluri, lățime variabilă) · Atkinson Hyperlegible Next & Mono (text și specificații — desenat de Braille Institute pentru persoane cu vedere slabă) |
+| Fonturi | Mona Sans (titluri, lățime variabilă) · Bodoni Moda italic (accente) · Atkinson Hyperlegible Next & Mono (text și specificații — desenat de Braille Institute pentru persoane cu vedere slabă) |
+| 3D | three.js, încărcat leneș (nu intră în JS-ul inițial) |
 | Plăți | Netopia Payments API v2 (IPN semnat JWT RS512), Stripe Checkout |
 | Facturare | SmartBill Cloud → e-Factura (SPV) |
 | Fișiere | disc local sau S3 / Cloudflare R2; rețetele criptate AES-256-GCM |

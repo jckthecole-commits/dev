@@ -159,7 +159,7 @@ export function ProductView({ product: p, initialColor, productionDays }: { prod
           ) : null}
           <div className="pointer-events-none absolute left-4 top-4 flex gap-2">
             {p.badge ? <span className="rounded-full bg-paper px-3 py-1 font-mono text-[11px] uppercase tracking-[0.1em] ring-1 ring-line-soft">{p.badge}</span> : null}
-            <span className="rounded-full bg-paper/80 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-graphite backdrop-blur">{shown === '3d' ? '3D · la scară' : 'randare la scară'}</span>
+            <span className={cn('rounded-full bg-paper/80 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-graphite backdrop-blur', shown === '3d' && 'max-sm:hidden')}>{shown === '3d' ? '3D · la scară' : 'randare la scară'}</span>
           </div>
           {shown === '3d' ? (
             <div className="absolute right-4 top-4 flex items-center gap-3">
