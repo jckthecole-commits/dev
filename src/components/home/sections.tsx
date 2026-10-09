@@ -116,7 +116,7 @@ export function TryOnPromo({ frame }: { frame: Card }) {
   const v = frame.variants[0]!
   return (
     <section aria-labelledby="proba" className="cv-auto container-x py-24">
-      <div className="grid items-center gap-14 overflow-hidden rounded-[32px] bg-ink px-6 py-14 text-fog sm:px-12 lg:grid-cols-[1fr_420px] lg:py-20">
+      <div className="grid items-center gap-14 overflow-clip rounded-[32px] bg-ink px-6 py-14 text-fog sm:px-12 lg:grid-cols-[1fr_420px] lg:py-20">
         <div>
           <div className="eyebrow text-fog/60">Probă virtuală · rulează în browser</div>
           <h2 id="proba" data-split className="disp focus-reveal mt-4 text-[clamp(38px,5.2vw,72px)]">
@@ -257,7 +257,7 @@ function CityMap() {
 export function B2BBand() {
   const items = ['Prețuri en-gros pe niveluri', 'Stoc în timp real', 'Comandă rapidă pe cod de model', 'Declarații de conformitate']
   return (
-    <section aria-labelledby="b2b" className="b2b">
+    <section aria-labelledby="b2b" data-tone="dark" className="b2b">
       <div aria-hidden className="b2b-word">
         Pentru optici
       </div>
@@ -300,9 +300,9 @@ export function JournalTeaser({ posts }: { posts: { slug: string; title: string;
       <ul className="grid gap-5 md:grid-cols-3">
         {posts.map((p, i) => (
           <li key={p.slug} className="focus-rise">
-            <Link href={`/jurnal/${p.slug}`} className="group card flex h-full flex-col overflow-hidden no-underline transition-shadow hover:shadow-[var(--shadow-lift)]">
-              <div className="relative grid aspect-[16/10] place-items-center overflow-hidden bg-[linear-gradient(160deg,#FFFFFF,#E7ECEA)]">
-                <span className="chart-row text-[clamp(44px,6vw,84px)] text-ink/85 blur-[5px] transition-[filter] duration-500 group-hover:blur-0">{['Rx', 'A□B', '1.67', 'UV', 'ADD', 'PD'][i % 6]}</span>
+            <Link href={`/jurnal/${p.slug}`} className="group card flex h-full flex-col overflow-clip no-underline transition-shadow hover:shadow-[var(--shadow-lift)]">
+              <div className="relative grid aspect-[16/10] place-items-center overflow-clip bg-[linear-gradient(160deg,#FFFFFF,#E7ECEA)]">
+                <span className="chart-row text-[clamp(44px,6vw,84px)] focus-pull text-ink/85">{['Rx', 'A□B', '1.67', 'UV', 'ADD', 'PD'][i % 6]}</span>
                 <span className="eyebrow absolute bottom-3 left-4 text-[10.5px]">Fig. {String(i + 1).padStart(2, '0')}</span>
               </div>
               <div className="flex flex-1 flex-col p-6">

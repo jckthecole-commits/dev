@@ -15,7 +15,7 @@ export function MobileMenu({ nav }: { nav: { href: string; label: string }[] }) 
 
   return (
     <>
-      <button type="button" aria-label="Deschide meniul" onClick={() => setOpen(true)} className="-ml-2 inline-flex size-11 items-center justify-center rounded-full hover:bg-ink/[.07] lg:hidden">
+      <button type="button" aria-label="Deschide meniul" onClick={() => setOpen(true)} className="hdr-ink -ml-2 inline-flex size-11 items-center justify-center rounded-full hover:bg-ink/[.07] lg:hidden">
         <Icon name="menu" />
       </button>
       <dialog

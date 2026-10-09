@@ -205,6 +205,10 @@ export async function startHeroEngine(opts: { canvas: HTMLCanvasElement; hero: H
     uRes.value.copy(buf)
     drawChart()
   }
+  // the blurred chart drifts on phones (CSS); the lenses show a still copy of it, so the
+  // chart is stopped where the copy is drawn — otherwise the two drift apart and the
+  // lenses show fragments of the wrong letters
+  chart.style.animation = 'none'
   layout()
   await document.fonts?.ready
   drawChart()
@@ -396,6 +400,7 @@ export async function startHeroEngine(opts: { canvas: HTMLCanvasElement; hero: H
       hero.removeEventListener('pointerleave', onLeave)
       window.removeEventListener('deviceorientation', onOrient)
       if (parts) disposeObject(parts.root)
+      chart.style.animation = ''
       chartTex.dispose()
       env.dispose()
       pmrem.dispose()

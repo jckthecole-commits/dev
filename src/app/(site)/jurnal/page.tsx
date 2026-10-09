@@ -17,9 +17,9 @@ export default async function JournalPage() {
       <div className="eyebrow">Jurnal</div>
       <h1 className="disp mt-3 text-[clamp(44px,6vw,96px)]">Ghiduri, fără jargon.</h1>
       {lead ? (
-        <Link href={`/jurnal/${lead.slug}`} className="group card mt-12 grid overflow-hidden no-underline md:grid-cols-2">
+        <Link href={`/jurnal/${lead.slug}`} className="group card mt-12 grid overflow-clip no-underline md:grid-cols-2">
           <div className="grid aspect-[16/10] place-items-center bg-[linear-gradient(160deg,#FFFFFF,#E7ECEA)] md:aspect-auto">
-            <span className="chart-row text-[clamp(56px,9vw,130px)] text-ink/85 blur-[6px] transition-[filter] duration-500 group-hover:blur-0">Rx</span>
+            <span className="chart-row text-[clamp(56px,9vw,130px)] focus-pull text-ink/85">Rx</span>
           </div>
           <div className="flex flex-col justify-center p-8 md:p-12">
             <div className="spec">{lead.category} · {lead.readingMinutes} min · {lead.publishedAt ? formatDate(lead.publishedAt) : ''}</div>
@@ -31,9 +31,9 @@ export default async function JournalPage() {
       <ul className="mt-6 grid gap-5 md:grid-cols-3">
         {rest.map((p, i) => (
           <li key={p.slug}>
-            <Link href={`/jurnal/${p.slug}`} className="group card flex h-full flex-col overflow-hidden no-underline">
+            <Link href={`/jurnal/${p.slug}`} className="group card flex h-full flex-col overflow-clip no-underline">
               <div className="grid aspect-[16/10] place-items-center bg-[linear-gradient(160deg,#FFFFFF,#E7ECEA)]">
-                <span className="chart-row text-[64px] text-ink/85 blur-[5px] transition-[filter] duration-500 group-hover:blur-0">{['A□B', 'ADD', '1.67', 'UV', 'PD'][i % 5]}</span>
+                <span className="chart-row text-[64px] focus-pull text-ink/85">{['A□B', 'ADD', '1.67', 'UV', 'PD'][i % 5]}</span>
               </div>
               <div className="flex flex-1 flex-col p-6">
                 <div className="spec">{p.category} · {p.readingMinutes} min</div>

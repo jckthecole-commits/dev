@@ -45,27 +45,67 @@ export async function boot(): Promise<Cleanup> {
   }
 
   // ── enhance what is on the page now, and whatever the router mounts later
+  let retry = 0
+  let tries = 0
   const scan = () => {
-    document.querySelectorAll<HTMLElement>('[data-split]:not([data-motion])').forEach(splitReveal)
-    document.querySelectorAll<HTMLElement>('[data-scrub-words]:not([data-motion])').forEach(scrubWords)
-    document.querySelectorAll<HTMLElement>('[data-marquee]:not([data-motion])').forEach(marquee)
-    document.querySelectorAll<HTMLElement>('[data-kinetic]:not([data-motion])').forEach(kinetic)
-    ScrollTrigger.refresh()
+    let changed = false
+    // a client navigation removed these elements: their triggers go with them
+    for (const t of ScrollTrigger.getAll()) {
+      if (t.trigger && !t.trigger.isConnected) {
+        t.kill()
+        changed = true
+      }
+    }
+    let waiting = false
+    for (const [selector, enhance] of EFFECTS) {
+      for (const el of document.querySelectorAll<HTMLElement>(`${selector}:not([data-motion])`)) {
+        // markup React has not hydrated yet is left alone: splitting it first would be a
+        // hydration mismatch, and React would throw the section away and render it again
+        if (!hydrated(el)) {
+          waiting = true
+          continue
+        }
+        enhance(el)
+        changed = true
+      }
+    }
+    // positions are measured again only when something was added or removed — a refresh
+    // in the middle of a scroll would stop it
+    if (changed) ScrollTrigger.refresh()
+    window.clearTimeout(retry)
+    if (waiting && ++tries < 60) retry = window.setTimeout(scan, 350)
+    else if (!waiting) tries = 0
   }
   scan()
   let pending = 0
-  const mo = new MutationObserver(() => {
+  const mo = new MutationObserver((records) => {
+    // the lens cursor rewrites its own label all the time
+    if (records.every((r) => (r.target as Element).closest?.('.lens-cursor'))) return
     window.clearTimeout(pending)
     pending = window.setTimeout(scan, 120)
   })
   mo.observe(document.body, { childList: true, subtree: true })
-  cleanups.push(() => mo.disconnect())
+  cleanups.push(() => {
+    mo.disconnect()
+    window.clearTimeout(pending)
+    window.clearTimeout(retry)
+  })
 
   return () => {
     for (const c of cleanups) c()
     ScrollTrigger.getAll().forEach((t) => t.kill())
   }
 }
+
+/** React marks every element it has hydrated (or rendered) with its fiber. */
+const hydrated = (el: Element) => Object.keys(el).some((k) => k.startsWith('__reactFiber$'))
+
+const EFFECTS: [string, (el: HTMLElement) => void][] = [
+  ['[data-split]', splitReveal],
+  ['[data-scrub-words]', scrubWords],
+  ['[data-marquee]', marquee],
+  ['[data-kinetic]', kinetic],
+]
 
 /** Headline focus pull: characters arrive blurred, low and faint, then lock into place. */
 function splitReveal(el: HTMLElement) {

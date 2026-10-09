@@ -42,7 +42,7 @@ export function SearchButton() {
 
   return (
     <>
-      <button type="button" aria-label="Caută (Ctrl+K)" onClick={() => { ref.current?.showModal(); inputRef.current?.focus() }} className="inline-flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/[.07]">
+      <button type="button" aria-label="Caută (Ctrl+K)" onClick={() => { ref.current?.showModal(); inputRef.current?.focus() }} className="hdr-ink inline-flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/[.07]">
         <Icon name="search" />
       </button>
       <dialog

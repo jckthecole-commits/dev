@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ro" className={`${display.variable} ${text.variable} ${code.variable}`}>
+    <html lang="ro" data-scroll-behavior="smooth" className={`${display.variable} ${text.variable} ${code.variable}`}>
       <body>{children}</body>
     </html>
   )

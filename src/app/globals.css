@@ -593,6 +593,85 @@
     backdrop-filter: blur(14px);
   }
 }
+/* Over a dark full-bleed section (footer, anatomy, B2B band — [data-tone='dark']) the bar
+   turns to smoked glass with light ink, instead of a pale strip the section shows through.
+   data-over is set by SiteEnhancements; .hdr-ink marks the bar's own links, never the
+   menus inside it. */
+.header-glass {
+  transition:
+    background-color 0.35s var(--ease-out-soft),
+    box-shadow 0.35s var(--ease-out-soft);
+}
+.header-glass .hdr-ink,
+.header-glass .hdr-btn {
+  transition:
+    color 0.35s var(--ease-out-soft),
+    box-shadow 0.35s var(--ease-out-soft),
+    background-color 0.2s;
+}
+.header-glass[data-over='dark'] {
+  animation: none;
+  background-color: rgb(11 15 19 / 0.78);
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.08);
+}
+.header-glass[data-over='dark'] .hdr-ink {
+  color: var(--color-fog);
+}
+.header-glass[data-over='dark'] .hdr-ink:is(a, button):hover {
+  background-color: rgb(255 255 255 / 0.1);
+}
+.header-glass[data-over='dark'] .nl.hdr-ink:hover {
+  background-color: transparent;
+}
+.header-glass[data-over='dark'] .hdr-btn {
+  color: var(--color-fog);
+  box-shadow: inset 0 0 0 1.5px var(--color-fog);
+}
+.header-glass[data-over='dark'] .hdr-btn:hover {
+  background: var(--color-fog);
+  color: var(--color-ink);
+}
+
+/* Journal covers: the optotype is pulled into focus as the card scrolls into view, on
+   every device (a hover-only focus left phones with permanently blurred covers).
+   Note for every view() timeline here: an ancestor with overflow:hidden becomes the
+   timeline's scroller and freezes it — clip with overflow:clip instead. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .focus-pull {
+      animation: focus-pull linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 40%;
+    }
+  }
+}
+@keyframes focus-pull {
+  from {
+    filter: blur(7px);
+    opacity: 0.55;
+  }
+}
+
+/* Page transitions animate the content only: the header stays put, above it */
+.header-glass {
+  view-transition-name: site-header;
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+/* the header is the same on both sides: its old snapshot (there from the first frame)
+   stays until the live one takes over; the new one would double the glass */
+::view-transition-old(site-header) {
+  animation: none;
+}
+::view-transition-new(site-header) {
+  display: none;
+}
+::view-transition {
+  pointer-events: none;
+}
 
 /* Film grain */
 .grain {
@@ -1279,7 +1358,9 @@ html.lenis,
 html.lenis body {
   height: auto;
 }
-.lenis.lenis-smooth {
+/* Lenis moves the page itself: a CSS smooth scroll on top of it would ease every one of
+   its frames a second time (and swallow the router's jump to the top of a new page) */
+html.lenis {
   scroll-behavior: auto !important;
 }
 .lenis:not(.lenis-autoToggle).lenis-stopped {
@@ -1427,7 +1508,7 @@ html.lenis body {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      overflow: hidden;
+      overflow: clip;
     }
     .rail-viewport {
       overflow: visible;
@@ -1474,7 +1555,7 @@ html.lenis body {
 /* Footer: the giant wordmark that reacts to the cursor */
 .footer-kinetic {
   overflow: hidden;
-  padding: 0 var(--gutter) 8px;
+  padding: 0 var(--gutter) clamp(14px, 2vw, 28px);
   font-family: var(--font-display);
   font-size: clamp(48px, 11.6vw, 196px);
   font-weight: 800;
@@ -1881,12 +1962,16 @@ html.lenis body {
 /* ── B2B: full-bleed cobalt, the type does the talking ───────────────────── */
 .b2b {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   margin-block: 48px;
   background: var(--color-cobalt);
   color: #fff;
+  container-type: inline-size;
 }
+/* the giant words are wider than any screen: they travel sideways with the scroll so the
+   whole of „Pentru optici” passes by (without scroll timelines they wrap instead) */
 .b2b-word {
+  width: max-content;
   padding: 8px var(--gutter) 28px;
   font-family: var(--font-display);
   font-size: clamp(64px, 15.5vw, 260px);
@@ -1897,6 +1982,32 @@ html.lenis body {
   text-transform: uppercase;
   white-space: nowrap;
   color: rgb(255 255 255 / 0.1);
+}
+@supports not (animation-timeline: view()) {
+  .b2b-word {
+    width: auto;
+    white-space: normal;
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .b2b-word {
+      animation: b2b-travel linear both;
+      animation-timeline: view();
+      animation-range: cover 10% cover 65%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .b2b-word {
+      width: auto;
+      white-space: normal;
+    }
+  }
+}
+@keyframes b2b-travel {
+  to {
+    translate: min(0px, calc(100cqw - 100%));
+  }
 }
 .b2b-list {
   display: grid;

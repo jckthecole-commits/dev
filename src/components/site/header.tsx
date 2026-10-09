@@ -38,20 +38,20 @@ export async function SiteHeader({ overlay = true }: { overlay?: boolean }) {
         <div className="container-x flex h-full items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <MobileMenu nav={NAV} />
-            <Wordmark size={20} className="text-ink" />
+            <Wordmark size={20} className="hdr-ink text-ink" />
           </div>
 
           <nav aria-label="Principal" className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) =>
               item.mega ? (
                 <div key={item.href} className="group relative">
-                  <Link href={item.href} className="nl py-3 text-[15px] font-medium text-ink">
+                  <Link href={item.href} className="nl hdr-ink py-3 text-[15px] font-medium text-ink">
                     {item.label}
                   </Link>
                   <MegaMenu />
                 </div>
               ) : (
-                <Link key={item.href} href={item.href} className="nl py-3 text-[15px] font-medium text-ink">
+                <Link key={item.href} href={item.href} className="nl hdr-ink py-3 text-[15px] font-medium text-ink">
                   {item.label}
                 </Link>
               ),
@@ -60,22 +60,22 @@ export async function SiteHeader({ overlay = true }: { overlay?: boolean }) {
 
           <div className="flex items-center gap-0.5">
             <SearchButton />
-            <Link href="/favorite" aria-label="Favorite" className="hidden size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/[.07] sm:inline-flex">
+            <Link href="/favorite" aria-label="Favorite" className="hdr-ink hidden size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/[.07] sm:inline-flex">
               <Icon name="heart" />
             </Link>
-            <Link href="/cont" aria-label="Contul meu" className="hidden size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/[.07] sm:inline-flex">
+            <Link href="/cont" aria-label="Contul meu" className="hdr-ink hidden size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/[.07] sm:inline-flex">
               <Icon name="user" />
             </Link>
             <Suspense
               fallback={
-                <Link href="/cos" data-cart-icon aria-label="Coș" className="inline-flex size-11 items-center justify-center rounded-full text-ink">
+                <Link href="/cos" data-cart-icon aria-label="Coș" className="hdr-ink inline-flex size-11 items-center justify-center rounded-full text-ink">
                   <Icon name="bag" />
                 </Link>
               }
             >
               <CartCount />
             </Suspense>
-            <Link href="/programare" className="btn btn-secondary btn-sm ml-3 hidden xl:inline-flex">
+            <Link href="/programare" className="btn btn-secondary btn-sm hdr-btn ml-3 hidden xl:inline-flex">
               Programează-te
             </Link>
           </div>

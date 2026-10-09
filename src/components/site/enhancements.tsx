@@ -23,6 +23,66 @@ export function SiteEnhancements() {
     }
   }, [])
 
+  // the header turns to dark glass while a [data-tone='dark'] section is under it: an
+  // IntersectionObserver whose root is shrunk to a 2 px strip through the header's middle
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('header.header-glass')
+    if (!header) return
+    const under = new Set<Element>()
+    let io: IntersectionObserver | null = null
+    const apply = () => {
+      // gone from the page, or no longer dark (the anatomy turns light once its 3D starts)
+      for (const el of under) if (!el.isConnected || el.getAttribute('data-tone') !== 'dark') under.delete(el)
+      if (under.size) header.dataset.over = 'dark'
+      else delete header.dataset.over
+    }
+    // observing an element twice is a no-op, so new sections are simply observed again
+    const watch = () => {
+      for (const el of document.querySelectorAll('[data-tone="dark"]')) io?.observe(el)
+      apply()
+    }
+    const setup = () => {
+      io?.disconnect()
+      // the bar is stuck to the top whenever a section can be under it
+      const mid = Math.round(header.offsetHeight / 2)
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) under.add(e.target)
+            else under.delete(e.target)
+          }
+          apply()
+        },
+        { rootMargin: `${-mid}px 0px ${-(window.innerHeight - mid - 2)}px 0px` },
+      )
+      watch()
+    }
+    setup()
+    // sections stream in and change with every navigation
+    let pending = 0
+    const mo = new MutationObserver(() => {
+      if (pending) return
+      pending = window.setTimeout(() => {
+        pending = 0
+        watch()
+      }, 150)
+    })
+    mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-tone'] })
+    let resize = 0
+    const onResize = () => {
+      window.clearTimeout(resize)
+      resize = window.setTimeout(setup, 200)
+    }
+    window.addEventListener('resize', onResize, { passive: true })
+    return () => {
+      io?.disconnect()
+      mo.disconnect()
+      window.clearTimeout(pending)
+      window.clearTimeout(resize)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
+
   // elements marked `data-magnetic` lean towards a nearby mouse cursor (one passive listener, mouse only)
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return

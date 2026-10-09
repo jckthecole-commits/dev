@@ -152,7 +152,7 @@ export function AnatomySection({ data }: { data: AnatomyData }) {
   }
 
   return (
-    <section ref={sectionRef} aria-labelledby="anatomie" className="anat" data-mode={mode} data-ready={ready ? '' : undefined}>
+    <section ref={sectionRef} aria-labelledby="anatomie" className="anat" data-mode={mode} data-tone={mode === 'gl' ? undefined : 'dark'} data-ready={ready ? '' : undefined}>
       <div ref={stageRef} className="anat-stage">
         <canvas ref={canvasRef} className="anat-canvas" aria-hidden />
         <div className="anat-art" aria-hidden>

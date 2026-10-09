@@ -18,7 +18,7 @@ export function NewsletterForm({ source = 'footer' }: { source?: string }) {
           required
           autoComplete="email"
           placeholder="adresa@email.ro"
-          className="h-[52px] flex-1 rounded-full border border-white/20 bg-white/[.06] px-5 text-fog outline-none placeholder:text-fog/40 focus:border-white/60"
+          className="h-[52px] w-full rounded-full sm:w-auto sm:flex-1 border border-white/20 bg-white/[.06] px-5 text-fog outline-none placeholder:text-fog/40 focus:border-white/60"
         />
         <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
         <input type="hidden" name="source" value={source} />

@@ -55,7 +55,7 @@ export async function SiteFooter() {
   const hours = s.hours.weekly
   const fmt = (d: (typeof hours)[number]) => ('closed' in d ? 'închis' : `${d.open}–${d.close}`)
   return (
-    <footer className="cv-auto relative mt-24 overflow-hidden bg-ink text-fog">
+    <footer data-tone="dark" className="cv-auto relative mt-24 overflow-hidden bg-ink text-fog">
       <div className="container-x relative pb-10 pt-16">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <div className="flex flex-col gap-6">
