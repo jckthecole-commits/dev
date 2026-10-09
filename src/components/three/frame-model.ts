@@ -258,7 +258,7 @@ export function glassMaterial(spec: FrameSpec, swatch: Swatch): THREE.Material {
 
 /* ── model ────────────────────────────────────────────────────────────── */
 
-export function buildFrame(spec: FrameSpec, swatch: Swatch, lensMaterial: (side: 1 | -1) => THREE.Material, opts: { templeLength?: number; transmission?: boolean } = {}): FrameParts {
+export function buildFrame(spec: FrameSpec, swatch: Swatch, lensMaterial: (side: 1 | -1) => THREE.Material, opts: { templeLength?: number; transmission?: boolean; knuckles?: number } = {}): FrameParts {
   const L = frameLayout(spec)
   const isMetal = swatch.kind === 'metal' || spec.material === 'metal' || spec.material === 'titan'
   const acetateDepth = isMetal ? 1.4 : Math.max(3.2, Math.min(6, L.rimW * 1.05))
@@ -378,9 +378,17 @@ export function buildFrame(spec: FrameSpec, swatch: Swatch, lensMaterial: (side:
     const end = new THREE.Mesh(new THREE.BoxGeometry(endW, endH, isMetal ? 1.6 : acetateDepth * 0.9, 1, 1, 1), isMetal ? rimMat : rimMat)
     end.position.set(s * -endW * 0.35, 0, 0)
     hinge.add(end)
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, endH * 0.86, 14), accent)
-    barrel.position.set(s * 1.4, 0, -acetateDepth * 0.55)
-    hinge.add(barrel)
+    // barrel: one cylinder, or N interleaved knuckles (odd ones ride on the temple)
+    const barrelH = endH * 0.86
+    const knuckles = Math.max(1, Math.round(opts.knuckles ?? 1))
+    const templeKnuckles: THREE.Mesh[] = []
+    for (let k = 0; k < knuckles; k++) {
+      const seg = barrelH / knuckles
+      const kn = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, knuckles > 1 ? seg * 0.84 : barrelH, 14), accent)
+      kn.position.set(s * 1.4, -barrelH / 2 + seg * (k + 0.5), -acetateDepth * 0.55)
+      if (k % 2 === 1) templeKnuckles.push(kn)
+      else hinge.add(kn)
+    }
     // temple: side profile (u = backwards, v = up) with the ear bend, extruded sideways
     const thick = isMetal ? 1.1 : 2.4
     const hStart = Math.max(2.6, endH * 0.8)
@@ -409,6 +417,10 @@ export function buildFrame(spec: FrameSpec, swatch: Swatch, lensMaterial: (side:
       temple.add(new THREE.Mesh(sg, new THREE.MeshPhysicalMaterial({ color: swatch.temple ?? '#1B1F23', roughness: 0.35, clearcoat: 0.8 })))
     }
     temple.position.set(s * 0.6, 0, -acetateDepth * 0.55)
+    for (const kn of templeKnuckles) {
+      kn.position.sub(temple.position)
+      temple.add(kn)
+    }
     temple.rotation.y = s * -0.05 // slight outward splay
     hinge.add(temple)
     root.add(hinge)

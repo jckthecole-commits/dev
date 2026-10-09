@@ -828,3 +828,290 @@
     width: 300px;
   }
 }
+
+/* ── Anatomia ramei: scroll-pinned exploded view ─────────────────────────── */
+.anat {
+  position: relative;
+  background: #0b0f13;
+  color: #fff;
+  isolation: isolate;
+}
+.anat .eyebrow {
+  color: rgb(255 255 255 / 0.6);
+}
+.anat-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 96px var(--gutter) 88px;
+}
+.anat-intro {
+  order: -1;
+}
+.anat-canvas,
+.anat-overlay,
+.anat-index {
+  display: none;
+}
+.anat-art {
+  max-width: 560px;
+  margin: 48px auto 56px;
+  filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.5));
+}
+.anat-intro h2 em,
+.anat-value,
+.anat-weight {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 520;
+  font-variation-settings: 'opsz' 96;
+}
+.anat-cards {
+  display: grid;
+  gap: 28px 32px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.anat-cards > li {
+  border-top: 1px solid rgb(255 255 255 / 0.14);
+  padding-top: 20px;
+}
+.anat-value {
+  margin: 10px 0 8px;
+  font-size: clamp(40px, 3.4vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.anat-final {
+  margin-top: 72px;
+  text-align: center;
+}
+.anat-weight {
+  font-size: clamp(96px, 11vw, 168px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+.anat-weight span {
+  font-size: 0.32em;
+  letter-spacing: 0;
+}
+.anat-btn-ghost {
+  color: #fff;
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.5);
+  &:hover {
+    background: #fff;
+    color: var(--color-ink);
+  }
+}
+
+/* pinned mode (WebGL) */
+.anat[data-mode='gl'] {
+  height: 560svh;
+}
+.anat[data-mode='gl'] .anat-stage {
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100svh - var(--header-h));
+  padding: 0;
+  overflow: hidden;
+  --anat-intro: 1;
+  --anat-final: 0;
+}
+.anat[data-mode='gl'] .anat-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.9s var(--ease-out-soft);
+}
+.anat[data-mode='gl'][data-ready] .anat-canvas {
+  opacity: 1;
+}
+.anat[data-mode='gl'] .anat-art {
+  position: absolute;
+  left: 47%;
+  top: 50%;
+  width: min(46vw, 640px);
+  margin: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.6s;
+}
+.anat[data-mode='gl'][data-ready] .anat-art {
+  opacity: 0;
+}
+.anat[data-mode='gl'] .anat-overlay {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  overflow: visible;
+}
+.anat-leader,
+.anat-dims path {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.62);
+  stroke-width: 1;
+}
+.anat-dims text {
+  fill: #fff;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #0b0f13;
+  stroke-width: 4px;
+}
+.anat-dot {
+  fill: #fff;
+}
+.anat-ring {
+  fill: none;
+  stroke: #fff;
+  stroke-opacity: 0.7;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: anat-pulse 1.8s var(--ease-out-soft) infinite;
+}
+@keyframes anat-pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.anat[data-mode='gl'] .anat-intro {
+  position: absolute;
+  left: var(--gutter);
+  top: clamp(32px, 8vh, 96px);
+  max-width: 760px;
+  opacity: var(--anat-intro);
+  filter: blur(calc((1 - var(--anat-intro)) * 14px));
+  transform: translateY(calc((1 - var(--anat-intro)) * -24px));
+  pointer-events: none;
+}
+.anat[data-mode='gl'] .anat-index {
+  display: flex;
+  gap: 26px;
+  position: absolute;
+  left: var(--gutter);
+  bottom: 30px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: calc(1 - var(--anat-intro) - var(--anat-final));
+}
+.anat-index li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgb(255 255 255 / 0.36);
+  transition: color 0.4s;
+}
+.anat-index li span {
+  display: inline-block;
+  width: 22px;
+}
+.anat-index li::before {
+  content: '';
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.5s var(--ease-out-expo);
+}
+.anat-stage[data-step='0'] .anat-index li:nth-child(1),
+.anat-stage[data-step='1'] .anat-index li:nth-child(2),
+.anat-stage[data-step='2'] .anat-index li:nth-child(3),
+.anat-stage[data-step='3'] .anat-index li:nth-child(4),
+.anat-stage[data-step='4'] .anat-index li:nth-child(5) {
+  color: #fff;
+  &::before {
+    width: 36px;
+  }
+}
+.anat[data-mode='gl'] .anat-cards {
+  position: absolute;
+  right: var(--gutter);
+  top: 50%;
+  width: 360px;
+  transform: translateY(-50%);
+  grid-template-columns: 1fr;
+}
+.anat[data-mode='gl'] .anat-value {
+  font-size: 60px;
+}
+.anat[data-mode='gl'] .anat-cards > li {
+  grid-area: 1 / 1;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 22px;
+  padding: 22px 24px 24px;
+  background: rgb(18 25 31 / 0.72);
+  backdrop-filter: blur(14px);
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(14px);
+  transition:
+    opacity 0.45s var(--ease-out-soft),
+    filter 0.6s var(--ease-out-soft),
+    transform 0.6s var(--ease-out-expo);
+}
+.anat-stage[data-step='0'] .anat-cards > li:nth-child(1),
+.anat-stage[data-step='1'] .anat-cards > li:nth-child(2),
+.anat-stage[data-step='2'] .anat-cards > li:nth-child(3),
+.anat-stage[data-step='3'] .anat-cards > li:nth-child(4),
+.anat-stage[data-step='4'] .anat-cards > li:nth-child(5) {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+.anat[data-mode='gl'] .anat-final {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(28px, 7vh, 80px);
+  width: min(640px, calc(100% - 2 * var(--gutter)));
+  margin: 0;
+  transform: translateX(-50%);
+  opacity: var(--anat-final);
+  filter: blur(calc((1 - var(--anat-final)) * 12px));
+  pointer-events: none;
+}
+.anat[data-mode='gl'] .anat-stage[data-step='5'] .anat-final {
+  pointer-events: auto;
+}
+@media (max-width: 767px) {
+  .anat[data-mode='gl'] {
+    height: 520svh;
+  }
+  .anat[data-mode='gl'] .anat-index {
+    display: none;
+  }
+  .anat[data-mode='gl'] .anat-art {
+    left: 50%;
+    top: 36%;
+    width: 84vw;
+  }
+  .anat[data-mode='gl'] .anat-cards {
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: 16px;
+    width: auto;
+    transform: none;
+  }
+  .anat[data-mode='gl'] .anat-cards > li {
+    padding: 16px 18px 18px;
+  }
+  .anat[data-mode='gl'] .anat-value {
+    font-size: 40px;
+    margin: 6px 0 4px;
+  }
+  .anat[data-mode='gl'] .anat-weight {
+    font-size: 104px;
+  }
+}
