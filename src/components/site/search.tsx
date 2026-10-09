@@ -77,7 +77,7 @@ export function SearchButton() {
             Esc
           </button>
         </form>
-        <div className="max-h-[60vh] overflow-y-auto p-3">
+        <div data-lenis-prevent className="max-h-[60vh] overflow-y-auto p-3">
           {shown.products.length === 0 && shown.articles.length === 0 ? (
             <div className="p-3">
               <div className="eyebrow mb-3">{q.trim().length >= 2 && !pending ? 'Niciun rezultat. Încearcă:' : 'Căutări frecvente'}</div>

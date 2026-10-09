@@ -252,12 +252,16 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // a tiny tick under the finger when the glasses change (Android; ignored elsewhere)
+  const tick = () => navigator.vibrate?.(8)
   const showFrame = (i: number) => {
+    tick()
     setFi(i)
     setVi(0)
     engineRef.current?.show(i, 0)
   }
   const showVariant = (i: number) => {
+    tick()
     setVi(i)
     engineRef.current?.show(fi, i)
   }

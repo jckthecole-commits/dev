@@ -40,7 +40,8 @@ Magazin online, configurator de lentile, probă virtuală, programări, portal B
 | Autentificare | Better Auth (e-mail + parolă, opțional Google) |
 | Stil | Tailwind CSS v4, tokeni în `src/app/globals.css` |
 | Fonturi | Mona Sans (titluri, lățime variabilă) · Bodoni Moda italic (accente) · Atkinson Hyperlegible Next & Mono (text și specificații — desenat de Braille Institute pentru persoane cu vedere slabă) |
-| 3D | three.js, încărcat leneș (nu intră în JS-ul inițial) |
+| 3D | three.js (+ depth of field și bloom în „Anatomia ramei”, doar desktop), încărcat la prima interacțiune |
+| Scroll | Lenis (inerțial, doar mouse/trackpad), încărcat la prima interacțiune |
 | Plăți | Netopia Payments API v2 (IPN semnat JWT RS512), Stripe Checkout |
 | Facturare | SmartBill Cloud → e-Factura (SPV) |
 | Fișiere | disc local sau S3 / Cloudflare R2; rețetele criptate AES-256-GCM |
@@ -144,6 +145,16 @@ Lista completă, cu bife, e în **Admin → Lansare & integrări**. Pe scurt:
 - Consimțământ explicit pentru date medicale la checkout; export JSON și ștergere a contului din *Contul meu* (și de către echipă, la cerere).
 - CSP strictă, HSTS, `frame-ancestors 'none'`, zonele private cu `Cache-Control: no-store`, limitare de rată pe formulare, autentificare și checkout, IPN-uri verificate criptografic, confirmarea plății protejată împotriva dublei procesări.
 - Bannerul de cookie-uri folosește Google Consent Mode v2; nimic opțional nu se încarcă înainte de alegere.
+
+## Performanță
+
+Măsurat cu Lighthouse (mobil, throttling simulat) pe build-ul de producție: catalog și pagina de produs 96–99, acasă ~95 (89–98 între rulări), desktop 98–99. Ce o ține așa:
+
+- **Fonturi** găzduite local, subsetate (latin + diacritice românești, fără hinting) și fixate pe instanțele folosite: ~60 KB la primul paint. Fața cu lățime variabilă (tipografia cinetică) se atașează după `load`. Le regenerezi cu `scripts/build-fonts.py`; licențele OFL sunt în `src/fonts`.
+- **3D, Lenis și post-procesarea** se încarcă abia la prima interacțiune (`src/lib/interaction.ts`); versiunile CSS/SVG sunt complete fără ele.
+- **Desenele ramelor din carduri** sunt imagini SVG generate (`/imagini/rame/<slug>/<culoare>.svg?v=…`, cache permanent), nu SVG inline — DOM mai mic, nimic de calculat la hidratare.
+- **Secțiunile de sub hero** sunt granițe `<Suspense>` (hidratate pe rând, fără task-uri lungi) cu `content-visibility: auto`.
+- Fără overlay de intro, fără bucle JS per cadru la încărcare; animațiile de repaus rulează pe compozitor.
 
 ## Structură
 

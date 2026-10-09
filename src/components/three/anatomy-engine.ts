@@ -9,6 +9,7 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import type { Swatch } from '@/lib/db/schema'
 import { frameLayout, type FrameSpec } from '@/lib/frame-geometry'
+import type { AnatomyPost } from './anatomy-post'
 import { buildFrame, disposeObject, glassMaterial, type FrameParts } from './frame-model'
 
 export type AnatomyEngine = { dispose: () => void }
@@ -257,9 +258,23 @@ export async function startAnatomyEngine(opts: {
 
   let cardAnchor: { x: number; y: number } | null = null
   let step = -2
-  const ro = new ResizeObserver(() => layout())
+  // desktop: depth of field that racks focus onto the part being explained, plus a little bloom
+  let post: AnatomyPost | null = null
+  if (!coarse && window.innerWidth >= 1024 && (navigator.hardwareConcurrency ?? 4) >= 4) {
+    try {
+      const { createAnatomyPost } = await import('./anatomy-post')
+      post = createAnatomyPost(renderer, scene, camera)
+    } catch {
+      post = null
+    }
+  }
+  const ro = new ResizeObserver(() => {
+    layout()
+    post?.setSize(W, H)
+  })
   ro.observe(stage)
   layout()
+  post?.setSize(W, H)
   let visible = true
   const io = new IntersectionObserver(([en]) => (visible = !!en?.isIntersecting))
   io.observe(section)
@@ -268,6 +283,7 @@ export async function startAnatomyEngine(opts: {
   const tB = new THREE.Vector3()
   const target = new THREE.Vector3()
   const anchor = new THREE.Vector3()
+  const focusPt = new THREE.Vector3()
   let raf = 0
   let last = performance.now()
   let first = true
@@ -365,7 +381,12 @@ export async function startAnatomyEngine(opts: {
       })
     }
 
-    renderer.render(scene, camera)
+    if (post) {
+      // rack focus: the subject sharp and the rest soft while a part is explained; deep focus otherwise
+      const focusOn = s >= 0 && s < 5 ? anchorOf(s, focusPt) : focusPt.copy(target)
+      post.setFocus(camera.position.distanceTo(focusOn), s >= 0 && s < 5 ? 0.2 + 0.8 * hold : 0.08)
+      post.render()
+    } else renderer.render(scene, camera)
     if (first) {
       first = false
       opts.onReady()
@@ -380,6 +401,7 @@ export async function startAnatomyEngine(opts: {
       io.disconnect()
       window.removeEventListener('pointermove', onMove)
       disposeObject(parts.root)
+      post?.dispose()
       bgTex.dispose()
       env.dispose()
       pmrem.dispose()

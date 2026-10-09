@@ -728,6 +728,7 @@
 .hero-focus[data-gl='on'] .hero-domlens,
 .hero-focus[data-gl='on'] .hero-frame-art {
   visibility: hidden;
+  animation: none;
 }
 .hero-focus[data-gl='on'] .hero-frame {
   cursor: grab;
@@ -1278,4 +1279,22 @@
   100% {
     transform: scale(1);
   }
+}
+
+/* ── Lenis (inertial scrolling, desktop) ─────────────────────────────────── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }
