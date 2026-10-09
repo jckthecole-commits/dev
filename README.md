@@ -102,7 +102,7 @@ cp .env.example .env    # completează valorile de producție
 scripts/docker-up.sh    # pornește Postgres, aplică migrațiile, face build și pornește aplicația + cron
 ```
 
-`docker-compose.yml` conține baza de date, aplicația (imagine *standalone*, utilizator fără privilegii, volum pentru fișiere încărcate) și un container care apelează mentenanța la 15 minute. Pune în față un reverse proxy cu HTTPS (Caddy, Nginx, Traefik).
+`docker-compose.yml` conține baza de date, aplicația (imagine *standalone*, utilizator fără privilegii, volum pentru fișiere încărcate) și un container care apelează mentenanța la 15 minute. Pune în față un reverse proxy cu HTTPS (Caddy, Nginx, Traefik) și setează `TRUSTED_PROXY_HOPS` la numărul de proxy-uri: IP-ul clientului (pentru limitări și jurnalul de audit) se ia din hop-ul adăugat de proxy, nu din valoarea trimisă de client.
 
 ### Vercel / alte platforme
 

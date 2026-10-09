@@ -1,9 +1,10 @@
-import { expect, open, signIn, test } from './fixtures'
+import { ADMIN_STATE, expect, open, test } from './fixtures'
 
 test.describe('admin', () => {
-  test.beforeEach(async ({ page }) => signIn(page))
+  test.use({ storageState: ADMIN_STATE })
 
   test('dashboard shows KPIs and the go-live checklist', async ({ page }) => {
+    await open(page, '/admin')
     await expect(page.getByText('Venituri · 30 zile')).toBeVisible()
     await expect(page.getByText(/Pregătire lansare · \d+\/\d+/)).toBeVisible()
   })

@@ -24,6 +24,8 @@ export async function open(page: Page, url: string) {
   await page.waitForLoadState('networkidle')
 }
 
+export const ADMIN_STATE = '.playwright/admin.json'
+
 export const ADMIN = { email: 'admin@sifravision.ro', password: process.env.DEMO_PASSWORD ?? 'sifra-demo-2026' }
 
 export async function signIn(page: Page, who = ADMIN, next = '/admin') {

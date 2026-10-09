@@ -29,3 +29,4 @@ coverage/
 .tmp/
 public/vendor/mediapipe/wasm/
 .next-*/
+.playwright/

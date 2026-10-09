@@ -1,6 +1,7 @@
 import 'server-only'
 import { headers } from 'next/headers'
 import { db } from '@/lib/db'
+import { CLIENT_IP_HEADER } from '@/lib/client-ip'
 import { auditLog } from '@/lib/db/schema'
 import type { SessionUser } from './session'
 
@@ -8,7 +9,7 @@ export async function audit(actor: Pick<SessionUser, 'id' | 'email'> | null, act
   let ip: string | null = null
   try {
     const h = await headers()
-    ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip')
+    ip = h.get(CLIENT_IP_HEADER)
   } catch {
     /* outside a request */
   }

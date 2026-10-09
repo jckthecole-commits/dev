@@ -7,6 +7,8 @@ import { defineConfig, devices } from '@playwright/test'
  * CI: builds and starts the production server via `webServer`.
  */
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
+// Each run looks like its own client to the rate limiters (one proxy hop is trusted).
+const runIp = `10.${[0, 0, 0].map(() => Math.floor(Math.random() * 250) + 1).join('.')}`
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -21,12 +23,14 @@ export default defineConfig({
     locale: 'ro-RO',
     timezoneId: 'Europe/Bucharest',
     contextOptions: { reducedMotion: 'reduce' },
+    extraHTTPHeaders: { 'x-forwarded-for': runIp },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : undefined,
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 1000 } }, testIgnore: /mobile\.spec\.ts/ },
+    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 1000 } }, testIgnore: /mobile\.spec\.ts/, dependencies: ['setup'] },
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /mobile\.spec\.ts/ },
   ],
   webServer: process.env.E2E_BASE_URL

@@ -70,6 +70,8 @@ export const auth = betterAuth({
     customRules: { '/sign-in/email': { window: 60, max: 8 }, '/forget-password': { window: 300, max: 3 } },
   },
   advanced: {
+    // single trusted value resolved in src/proxy.ts from the proxy hop (not spoofable)
+    ipAddress: { ipAddressHeaders: ['x-client-ip'] },
     cookiePrefix: 'sv',
     database: { generateId: () => randomUUID() },
   },
