@@ -180,6 +180,7 @@ Lista completă, cu bife, e în **Admin → Lansare & integrări**. Pe scurt:
 
 Măsurat cu Lighthouse (mobil, throttling simulat) pe build-ul de producție: catalog și pagina de produs ~98, acasă ~88 (86–94 între rulări), desktop 99–100. Ce o ține așa:
 
+- **Video-ul din hero** (tranziții generate cu Higgsfield/Kling, lipite într-o buclă fără cusătură) pornește abia după încărcarea paginii; primul cadru e un poster AVIF de ~20 KB (LCP), video-ul e AV1 (~0,3–0,6 MB) cu H.264 ca rezervă și se oprește când nu e pe ecran. Sursele sunt în `scripts/media/sources.json`; `node scripts/media/build.mjs` descarcă, lipește clipurile și scrie fișierele în `public/media` (cache permanent). Fără `src/lib/media.json`, hero-ul rămâne cel 3D.
 - **Fonturi** variabile găzduite local, subsetate (latin + diacritice românești, fără hinting): ~120 KB în total față de ~300 KB de pe CDN. Le regenerezi cu `scripts/build-fonts.py`; licențele OFL sunt în `src/fonts`.
 - **3D, GSAP, Lenis, post-procesarea și notificările** se încarcă abia la prima interacțiune (`src/lib/interaction.ts`, `src/lib/motion/boot.ts`); versiunile CSS/SVG sunt complete fără ele. Galeria orizontală a colecției e CSS scroll-driven, fără JS.
 - **Desenele ramelor din carduri** sunt imagini SVG generate (`/imagini/rame/<slug>/<culoare>.svg?v=…`, cache permanent), nu SVG inline — DOM mai mic, nimic de calculat la hidratare.

@@ -1,1 +1,13 @@
-{}
+{
+  "hero-reel": {
+    "dir": "/media/hero-reel-04851f51",
+    "kind": "video",
+    "w": 1912,
+    "h": 1080,
+    "mw": 1274,
+    "mh": 720,
+    "duration": 4.5,
+    "endPoster": false,
+    "av1": true
+  }
+}

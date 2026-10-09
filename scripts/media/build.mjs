@@ -4,8 +4,10 @@
  *
  *   images → AVIF + WebP at the listed widths, plus an optional pre-blurred copy
  *            (a few KB: the out-of-focus layer paints at once and costs no CSS blur)
- *   videos → H.264 MP4s encoded for scroll scrubbing (short GOP, no audio, faststart),
- *            a desktop and a mobile cut, and a poster from the first decoded frame
+ *   videos → H.264 MP4s (no audio, faststart), a desktop and a mobile cut, optional AV1
+ *            twins, and a poster from the first decoded frame. Scrubbed films get a short
+ *            GOP; `srcs` joins clips that hand over on shared frames into one take, and
+ *            `loopFade` dissolves its end into its start for a seamless loop.
  *
  * Output goes to public/media/<id>-<hash>/ (the hash of the source URL, so the files
  * can be cached forever) and src/lib/media.json describes what was written.
@@ -70,11 +72,35 @@ async function image(id, s, dir) {
   return { kind: 'image', w: width, h: height, widths, blur }
 }
 
+/**
+ * Several clips that hand over on shared frames (clip n ends on the frame clip n+1 starts
+ * on) become one take; with `loopFade` its end dissolves into its own beginning, so a
+ * looping <video> has no visible seam.
+ */
+function joinClips(id, files, s) {
+  const join = path.join(cache, `${id}-${hash(files.join())}-join.mp4`)
+  const parts = files.map((_, i) => `[${i}:v]trim=start_frame=${i ? 1 : 0},setpts=PTS-STARTPTS,fps=${s.fps ?? 24},format=yuv420p[v${i}]`)
+  ffmpeg(...files.flatMap((f) => ['-i', f]), '-filter_complex', `${parts.join(';')};${files.map((_, i) => `[v${i}]`).join('')}concat=n=${files.length}:v=1:a=0[out]`, '-map', '[out]', '-c:v', 'libx264', '-preset', 'fast', '-crf', '12', join)
+  if (!s.loopFade) return join
+  const F = s.loopFade
+  const D = probe(join).duration
+  const loop = path.join(cache, `${id}-${hash(files.join() + F)}-loop.mp4`)
+  ffmpeg('-i', join, '-filter_complex', `[0:v]split[a][b];[a]trim=start=${F},setpts=PTS-STARTPTS[x];[b]trim=end=${F},setpts=PTS-STARTPTS[y];[x][y]xfade=transition=fade:duration=${F}:offset=${(D - 2 * F).toFixed(3)}[out]`, '-map', '[out]', '-c:v', 'libx264', '-preset', 'fast', '-crf', '12', loop)
+  return loop
+}
+
 async function video(id, s, dir) {
-  const file = await download(s.src)
-  // short GOP and no scene-cut keyframes: any frame is a cheap seek away when scrubbing
-  ffmpeg('-i', file, '-an', '-vf', `scale='min(1920,iw)':-2,unsharp=5:5:0.6:5:5:0.0`, '-c:v', 'libx264', '-preset', 'slow', '-crf', String(s.crf ?? 22), '-pix_fmt', 'yuv420p', '-g', '8', '-keyint_min', '8', '-sc_threshold', '0', '-movflags', '+faststart', path.join(dir, 'desktop.mp4'))
-  ffmpeg('-i', file, '-an', '-vf', `scale=-2:'min(${s.mobileHeight ?? 540},ih)',unsharp=5:5:0.5:5:5:0.0`, '-c:v', 'libx264', '-preset', 'slow', '-crf', String((s.crf ?? 22) + 3), '-pix_fmt', 'yuv420p', '-g', '4', '-keyint_min', '4', '-sc_threshold', '0', '-movflags', '+faststart', path.join(dir, 'mobile.mp4'))
+  const file = s.srcs ? joinClips(id, await Promise.all(s.srcs.map(download)), s) : await download(s.src)
+  // scrubbed films: short GOP, no scene-cut keyframes — any frame is a cheap seek away.
+  // looping reels play straight through and can afford normal keyframe spacing.
+  const gop = (n) => (s.scrub === false ? ['-g', '48'] : ['-g', String(n), '-keyint_min', String(n), '-sc_threshold', '0'])
+  ffmpeg('-i', file, '-an', '-vf', `scale='min(1920,iw)':-2,unsharp=5:5:0.6:5:5:0.0`, '-c:v', 'libx264', '-preset', 'slow', '-crf', String(s.crf ?? 22), '-pix_fmt', 'yuv420p', ...gop(8), '-movflags', '+faststart', path.join(dir, 'desktop.mp4'))
+  ffmpeg('-i', file, '-an', '-vf', `scale=-2:'min(${s.mobileHeight ?? 540},ih)',unsharp=5:5:0.5:5:5:0.0`, '-c:v', 'libx264', '-preset', 'slow', '-crf', String((s.crf ?? 22) + 3), '-pix_fmt', 'yuv420p', ...gop(4), '-movflags', '+faststart', path.join(dir, 'mobile.mp4'))
+  if (s.av1) {
+    // AV1 first for browsers that decode it (about half the bytes); the H.264 files stay as the fallback
+    ffmpeg('-i', file, '-an', '-vf', `scale='min(1920,iw)':-2`, '-c:v', 'libsvtav1', '-preset', '6', '-crf', String((s.crf ?? 22) + 12), '-pix_fmt', 'yuv420p', '-g', '48', '-movflags', '+faststart', path.join(dir, 'desktop-av1.mp4'))
+    ffmpeg('-i', file, '-an', '-vf', `scale=-2:'min(${s.mobileHeight ?? 540},ih)'`, '-c:v', 'libsvtav1', '-preset', '6', '-crf', String((s.crf ?? 22) + 15), '-pix_fmt', 'yuv420p', '-g', '48', '-movflags', '+faststart', path.join(dir, 'mobile-av1.mp4'))
+  }
   // posters are frames of the encoded clips, so the swap to video is seamless
   for (const [cut, name] of [
     ['desktop.mp4', 'poster'],
@@ -95,13 +121,13 @@ async function video(id, s, dir) {
   }
   const d = probe(path.join(dir, 'desktop.mp4'))
   const m = probe(path.join(dir, 'mobile.mp4'))
-  return { kind: 'video', w: d.w, h: d.h, mw: m.w, mh: m.h, duration: d.duration, endPoster: !!s.endPoster }
+  return { kind: 'video', w: d.w, h: d.h, mw: m.w, mh: m.h, duration: d.duration, endPoster: !!s.endPoster, av1: !!s.av1 }
 }
 
 await mkdir(pub, { recursive: true })
 for (const [id, s] of Object.entries(sources)) {
   if (only.size && !only.has(id)) continue
-  const base = `${id}-${hash(s.src + JSON.stringify(s))}`
+  const base = `${id}-${hash(JSON.stringify(s))}`
   const dir = path.join(pub, base)
   // drop older builds of the same asset
   for (const d of await readdir(pub)) if (d.startsWith(`${id}-`) && d !== base && d.slice(id.length + 1).length === 8) await rm(path.join(pub, d), { recursive: true })

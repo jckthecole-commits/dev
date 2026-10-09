@@ -5,7 +5,7 @@ import media from './media.json'
  * entry is optional: a section without its media keeps its drawn/CSS version.
  */
 export type MediaImage = { kind: 'image'; dir: string; w: number; h: number; widths: number[]; blur?: number; alt?: string }
-export type MediaVideo = { kind: 'video'; dir: string; w: number; h: number; mw: number; mh: number; duration: number; endPoster: boolean }
+export type MediaVideo = { kind: 'video'; dir: string; w: number; h: number; mw: number; mh: number; duration: number; endPoster: boolean; av1?: boolean }
 
 const all = media as Record<string, MediaImage | MediaVideo>
 

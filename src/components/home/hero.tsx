@@ -9,7 +9,6 @@ import type { Swatch } from '@/lib/db/schema'
 import { frameLayout, type FrameSpec } from '@/lib/frame-geometry'
 import { swatchCss } from '@/lib/product-art'
 import { onFirstInteraction } from '@/lib/interaction'
-import { largest, srcSet, type MediaImage } from '@/lib/media'
 import type { HeroEngine } from '@/components/three/hero-engine'
 
 export type HeroFrame = {
@@ -51,7 +50,18 @@ function EyeChart({ scale = 1 }: { scale?: number }) {
 /** Each word: an upright Mona Sans part and an italic Bodoni accent where marked with *…*. */
 const TITLE = ['Când stilul', '*ține pasul*', 'cu tine.']
 
-function KineticTitle({ className }: { className?: string }) {
+/** „Sifra Vision — Optică · Galați” above the title. */
+export function HeroKicker() {
+  return (
+    <p className="hero-kicker">
+      <span className="hero-kicker-brand">Sifra Vision</span>
+      <span aria-hidden className="hero-kicker-rule" />
+      <span>Optică · Galați</span>
+    </p>
+  )
+}
+
+export function KineticTitle({ className }: { className?: string }) {
   let i = 0
   return (
     <h1 className={className} aria-label={TITLE.join(' ').replace(/\*/g, '')}>
@@ -152,37 +162,8 @@ function Hint({ show, touch }: { show: boolean; touch?: boolean }) {
   )
 }
 
-/** Portrait screens get the vertical photograph; the engine and the CSS agree on this query. */
-const PORTRAIT = '(max-aspect-ratio: 4/5)'
-
-/** The Danube at Galați in fog: blurred behind everything, sharp only through the lenses. */
-function Photo({ photo, sharp, imgRef }: { photo: { wide: MediaImage; tall: MediaImage }; sharp: boolean; imgRef?: React.Ref<HTMLImageElement> }) {
-  const { wide, tall } = photo
-  if (!sharp)
-    return (
-      <picture>
-        <source media={PORTRAIT} type="image/avif" srcSet={`${tall.dir}/blur.avif`} />
-        <source media={PORTRAIT} type="image/webp" srcSet={`${tall.dir}/blur.webp`} />
-        <source type="image/avif" srcSet={`${wide.dir}/blur.avif`} />
-        <img ref={imgRef} src={`${wide.dir}/blur.webp`} alt="" width={wide.w} height={wide.h} fetchPriority="high" decoding="async" className="hero-photo" />
-      </picture>
-    )
-  return (
-    <picture>
-      <source media={PORTRAIT} type="image/avif" srcSet={srcSet(tall, 'avif')} sizes="100vw" />
-      <source media={PORTRAIT} type="image/webp" srcSet={srcSet(tall, 'webp')} sizes="100vw" />
-      <source type="image/avif" srcSet={srcSet(wide, 'avif')} sizes="100vw" />
-      <img ref={imgRef} src={largest(wide)} srcSet={srcSet(wide, 'webp')} sizes="100vw" alt="" width={wide.w} height={wide.h} decoding="async" className="hero-photo" />
-    </picture>
-  )
-}
-
-export function HeroFocus({ frames, photo }: { frames: HeroFrame[]; photo?: { wide: MediaImage; tall: MediaImage } | null }) {
+export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
   const heroRef = useRef<HTMLElement>(null)
-  const backdropRef = useRef<HTMLImageElement>(null)
-  const sharpRef = useRef<HTMLImageElement>(null)
-  // the sharp photograph (a few hundred KB) waits for the visitor's first move, like the 3D
-  const [sharp, setSharp] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const anchorRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<HTMLDivElement>(null)
@@ -234,11 +215,6 @@ export function HeroFocus({ frames, photo }: { frames: HeroFrame[]; photo?: { wi
     }
   }, [gl])
 
-  useEffect(() => {
-    if (!photo) return
-    return onFirstInteraction(() => setSharp(true))
-  }, [photo])
-
   // WebGL
   useEffect(() => {
     const hero = heroRef.current
@@ -263,8 +239,6 @@ export function HeroFocus({ frames, photo }: { frames: HeroFrame[]; photo?: { wi
           frames: frames.map((f) => ({ spec: f.art as FrameSpec, templeLength: f.templeLength, variants: f.variants })),
           frame: 0,
           variant: 0,
-          backdrop: backdropRef.current,
-          photo: photo ? () => sharpRef.current : undefined,
           onReady: () => !cancelled && setGl(true),
           onInteract: () => setTouched(true),
         })
@@ -311,8 +285,6 @@ export function HeroFocus({ frames, photo }: { frames: HeroFrame[]; photo?: { wi
       className="hero-focus relative -mt-[var(--header-h)] overflow-hidden bg-fog"
       style={{ ['--mx' as string]: '62%', ['--my' as string]: '44%', ['--r' as string]: 'var(--lens-r)' }}
     >
-      {/* the city in fog: out of focus everywhere but through the lenses */}
-      {photo ? <Photo photo={photo} sharp={false} imgRef={backdropRef} /> : null}
       {/* blurred optotype */}
       <div ref={chartRef} aria-hidden className="hero-chart chart-blur absolute opacity-[.42]">
         <EyeChart />
@@ -320,7 +292,6 @@ export function HeroFocus({ frames, photo }: { frames: HeroFrame[]; photo?: { wi
       {/* CSS fallback: sharp optotype inside a cursor lens */}
       <div aria-hidden className="hero-domlens pointer-events-none absolute inset-0" style={{ clipPath: 'circle(var(--r) at var(--mx) var(--my))' }}>
         <div className="absolute inset-0 bg-glass" style={{ transformOrigin: 'var(--mx) var(--my)', transform: 'scale(1.12)' }}>
-          {photo && sharp ? <Photo photo={photo} sharp imgRef={sharpRef} /> : null}
           <div className="hero-chart absolute text-ink">
             <EyeChart />
           </div>
@@ -373,11 +344,7 @@ export function HeroFocus({ frames, photo }: { frames: HeroFrame[]; photo?: { wi
       {/* copy */}
       <div className="hero-copy relative z-10 container-x">
         <div>
-          <p className="hero-kicker">
-            <span className="text-ink">Sifra Vision</span>
-            <span aria-hidden className="h-px w-10 bg-ink/40" />
-            <span>Optică · Galați</span>
-          </p>
+          <HeroKicker />
           <KineticTitle className="disp hero-title m-0 text-ink" />
         </div>
         <div className="hero-side flex flex-col gap-5" style={{ animation: 'fadeup .8s var(--ease-out-expo) both', animationDelay: 'calc(var(--intro-delay) + .95s)' }}>

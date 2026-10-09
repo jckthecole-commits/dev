@@ -1,9 +1,8 @@
 /**
- * Hero 3D engine: a real pair of glasses floating over the blurred optotype and the
- * Danube at Galați in fog. Through the lenses both are sharp — the lens shader samples
- * a crisp copy (the sharp photograph under the chart's letters) in screen space,
- * magnified like a real plus lens, with a touch of chromatic aberration towards the
- * edge. Loaded lazily after first paint.
+ * Hero 3D engine: a real pair of glasses floating over the blurred optotype.
+ * Through the lenses the chart is sharp — the lens shader samples a crisp copy
+ * of the chart in screen space, magnified like a real plus lens, with a touch
+ * of chromatic aberration towards the edge. Loaded lazily after first paint.
  */
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
@@ -63,21 +62,7 @@ void main() {
   #include <colorspace_fragment>
 }`
 
-export async function startHeroEngine(opts: {
-  canvas: HTMLCanvasElement
-  hero: HTMLElement
-  anchor: HTMLElement
-  chart: HTMLElement
-  /** the blurred backdrop <img> (its box and object-position place the sharp copy) */
-  backdrop?: HTMLImageElement | null
-  /** the sharp photograph, once React has rendered it */
-  photo?: () => HTMLImageElement | null
-  frames: EngineFrame[]
-  frame: number
-  variant: number
-  onReady: () => void
-  onInteract?: () => void
-}): Promise<HeroEngine> {
+export async function startHeroEngine(opts: { canvas: HTMLCanvasElement; hero: HTMLElement; anchor: HTMLElement; chart: HTMLElement; frames: EngineFrame[]; frame: number; variant: number; onReady: () => void; onInteract?: () => void }): Promise<HeroEngine> {
   const { canvas, hero, anchor, chart, frames } = opts
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const coarse = window.matchMedia('(pointer: coarse)').matches
@@ -113,18 +98,6 @@ export async function startHeroEngine(opts: {
     const g = chartCanvas.getContext('2d')!
     g.fillStyle = '#F7F9F8'
     g.fillRect(0, 0, chartCanvas.width, chartCanvas.height)
-    const photo = opts.photo?.()
-    const bd = opts.backdrop
-    if (photo?.naturalWidth && bd) {
-      // the same cover fit and focal point as the blurred <img>, so both line up exactly
-      const br = bd.getBoundingClientRect()
-      const [px = 50, py = 50] = getComputedStyle(bd).objectPosition.split(' ').map((v) => parseFloat(v))
-      const k = Math.max(br.width / photo.naturalWidth, br.height / photo.naturalHeight)
-      const dw = photo.naturalWidth * k
-      const dh = photo.naturalHeight * k
-      g.drawImage(photo, (br.left - hr.left + ((br.width - dw) * px) / 100) * dpr, (br.top - hr.top + ((br.height - dh) * py) / 100) * dpr, dw * dpr, dh * dpr)
-      g.globalAlpha = 0.86
-    }
     g.fillStyle = '#0D1216'
     g.textBaseline = 'middle'
     for (const row of Array.from(chart.querySelectorAll<HTMLElement>('.chart-row'))) {
@@ -143,7 +116,6 @@ export async function startHeroEngine(opts: {
         x += widths[i]! + spacing
       })
     }
-    g.globalAlpha = 1
     chartTex.needsUpdate = true
   }
 
@@ -239,14 +211,6 @@ export async function startHeroEngine(opts: {
   chart.style.animation = 'none'
   layout()
   await document.fonts?.ready
-  // the lenses must not open onto an empty copy: wait (briefly) for the sharp photograph
-  if (opts.photo) {
-    const until = performance.now() + 3500
-    while (!opts.photo()?.complete && performance.now() < until) await new Promise((r) => setTimeout(r, 60))
-    await opts.photo()?.decode().catch(() => {})
-    // a resize can switch the source (portrait ↔ wide): draw the new one when it lands
-    opts.photo()?.addEventListener('load', drawChart)
-  }
   drawChart()
 
   // ── interaction
@@ -437,7 +401,6 @@ export async function startHeroEngine(opts: {
       window.removeEventListener('deviceorientation', onOrient)
       if (parts) disposeObject(parts.root)
       chart.style.animation = ''
-      opts.photo?.()?.removeEventListener('load', drawChart)
       chartTex.dispose()
       env.dispose()
       pmrem.dispose()
