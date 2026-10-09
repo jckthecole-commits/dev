@@ -41,7 +41,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  partialPrefetching: true,
+  partialPrefetching: false,
   reactCompiler: true,
   output: 'standalone',
   distDir: process.env.NEXT_DIST_DIR || '.next',

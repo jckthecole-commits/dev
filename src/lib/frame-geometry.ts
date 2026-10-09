@@ -158,12 +158,41 @@ function fitBox(pts: Pt[], a: number, b: number): Pt[] {
 
 const f1 = (n: number) => (Math.round(n * 10) / 10).toString()
 
+/** Compact number: 0.1 mm precision, no leading zero ("-.4"), no trailing zeros. */
+const c1 = (tenths: number) => {
+  const s = (tenths / 10).toString()
+  return s.replace(/^(-?)0\./, '$1.')
+}
+
+/**
+ * SVG path from points, using relative line-tos between *rounded* absolute
+ * coordinates (no rounding drift) — about 40% smaller than absolute L commands,
+ * which matters because every card, hero and OG image inlines these paths.
+ */
 export function pathFromPoints(pts: Pt[], closed = true): string {
   if (!pts.length) return ''
-  const [x0, y0] = pts[0]!
-  let d = `M${f1(x0)} ${f1(y0)}`
-  for (let i = 1; i < pts.length; i++) d += `L${f1(pts[i]![0])} ${f1(pts[i]![1])}`
-  return closed ? `${d}Z` : d
+  const r = pts.map(([x, y]) => [Math.round(x * 10), Math.round(y * 10)] as const)
+  // tokens need a separator only when the next one would otherwise merge into the previous number
+  let d = `M${c1(r[0]![0])} ${c1(r[0]![1])}l`
+  let last = 'l'
+  const push = (t: string) => {
+    const merges = /\d$/.test(last) && (/^\d/.test(t) || (t.startsWith('.') && !last.includes('.')))
+    d += (merges ? ' ' : '') + t
+    last = t
+  }
+  let prev = r[0]!
+  let n = 0
+  for (let i = 1; i < r.length; i++) {
+    const dx = r[i]![0] - prev[0]
+    const dy = r[i]![1] - prev[1]
+    if (dx === 0 && dy === 0) continue
+    push(c1(dx))
+    push(c1(dy))
+    prev = r[i]!
+    n++
+  }
+  if (!n) d = d.slice(0, -1)
+  return closed ? `${d}z` : d
 }
 
 /** x of the outline on the nasal (side=-1) or temporal (side=1) edge at height y. */

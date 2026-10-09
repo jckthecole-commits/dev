@@ -89,12 +89,12 @@ export function Booking({ services, initialService }: { services: Svc[]; initial
               </button>
             </div>
           </div>
-          <div className={cn('grid grid-cols-7 gap-2 transition-opacity', loading && 'opacity-50')}>
+          <div role="group" aria-label="Ziua" className={cn('grid grid-cols-7 gap-2 transition-opacity', loading && 'opacity-50')}>
             {days.map((d) => {
               const n = avail[d]?.length ?? 0
               const [, m, dd] = d.split('-').map(Number) as [number, number, number]
               return (
-                <button key={d} type="button" disabled={!n} aria-pressed={day === d} onClick={() => { setDay(d); setTime(null) }} className={cn('flex flex-col items-center rounded-xl py-2.5 ring-1 transition-colors disabled:opacity-35', day === d ? 'bg-ink text-fog ring-ink' : 'bg-paper ring-line hover:ring-graphite')}>
+                <button key={d} type="button" disabled={!n} aria-pressed={day === d} aria-label={`${WD[weekdayOf(d)]} ${dd} ${MONTHS[m - 1]} · ${n ? `${n} ${n === 1 ? 'oră liberă' : 'ore libere'}` : 'indisponibil'}`} onClick={() => { setDay(d); setTime(null) }} className={cn('flex flex-col items-center rounded-xl py-2.5 ring-1 transition-colors disabled:opacity-35', day === d ? 'bg-ink text-fog ring-ink' : 'bg-paper ring-line hover:ring-graphite')}>
                   <span className="text-[11.5px] uppercase tracking-wide opacity-70">{WD[weekdayOf(d)]}</span>
                   <span className="text-[18px] font-bold tnum">{dd}</span>
                   <span className="text-[10.5px] opacity-70">{MONTHS[m - 1]}</span>
