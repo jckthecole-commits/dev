@@ -30,6 +30,7 @@
   --font-sans: var(--font-text), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-mona), 'Arial', sans-serif;
   --font-mono: var(--font-code), ui-monospace, 'SFMono-Regular', monospace;
+  --font-serif: var(--font-bodoni), 'Didot', 'Bodoni 72', serif;
 
   --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -143,6 +144,30 @@
   letter-spacing: -0.02em;
   line-height: 0.95;
 }
+/* Italic Bodoni accent inside display headings: <h2 class="disp">Rame care se <em>poartă</em> toată ziua.</h2> */
+.disp em,
+.hero-accent,
+.accent-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 520;
+  font-stretch: normal;
+  letter-spacing: -0.01em;
+  font-variation-settings: 'opsz' 96;
+}
+.disp em {
+  font-size: 1.06em;
+  line-height: 0;
+  padding-right: 0.04em;
+}
+.hero-accent-inline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.12em;
+  font-variation-settings: 'opsz' 24;
+}
+
 @utility disp-wide {
   font-family: var(--font-display);
   font-stretch: 125%;
@@ -671,6 +696,51 @@
 .frame3d {
   transform: rotateX(var(--rx, 4deg)) rotateY(var(--ry, -12deg)) rotateZ(calc(var(--ry, -12deg) * -0.06));
 }
+/* WebGL glasses: the canvas fades in over the CSS fallback, which then hides */
+.hero-gl {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s var(--ease-out-soft);
+}
+.hero-focus[data-gl='on'] .hero-gl {
+  opacity: 1;
+}
+.hero-focus[data-gl='on'] .hero-domlens,
+.hero-focus[data-gl='on'] .hero-frame-art {
+  visibility: hidden;
+}
+.hero-focus[data-gl='on'] .hero-frame {
+  cursor: grab;
+  touch-action: pan-y;
+}
+.hero-focus[data-gl='on'] .hero-frame:active {
+  cursor: grabbing;
+}
+.hero-focus[data-gl='on'] .hero-chart {
+  animation: none;
+}
+.hero-controls-m {
+  top: 340px;
+}
+/* the comma under ț must not touch the next line */
+.hero-title .hero-accent {
+  line-height: 1.04;
+  margin-block: -0.04em 0.02em;
+}
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
 .hero-tag {
   right: var(--gutter);
   top: calc(var(--header-h) + 128px);
@@ -720,14 +790,18 @@
     animation: chart-drift 9s var(--ease-in-out-soft) infinite alternate;
   }
   .hero-frame {
-    top: 250px;
+    top: 196px;
     margin-left: -145px;
   }
+  /* mobile: stack — glasses & switcher on top, copy flows below them */
   .hero-copy {
+    position: relative;
+    bottom: auto;
     flex-direction: column;
     align-items: stretch;
-    bottom: 28px;
-    gap: 20px;
+    gap: 18px;
+    padding-top: 414px;
+    padding-bottom: 28px;
   }
   .hero-title {
     font-size: clamp(46px, 13.2vw, 76px);

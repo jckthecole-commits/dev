@@ -19,16 +19,24 @@ export default async function HomePage() {
   const [settings, all, lenses, posts, faqs] = await Promise.all([getSettings(), getCatalog('all'), getLensCatalog(), getPublishedPosts('article'), getFaqs()])
   const optical = all.filter((p) => p.category === 'optical')
   const sun = all.filter((p) => p.category === 'sun')
-  const heroProduct = optical.find((p) => p.slug === 'mira-52') ?? optical[0]!
-  const heroVariant = heroProduct.variants[0]!
-  const hero: HeroFrame = {
-    slug: heroProduct.slug,
-    name: heroProduct.name,
-    colorName: heroVariant.colorName.replace(' translucid', ''),
-    spec: `${formatFrameSize(heroProduct)} · ${heroProduct.weightGrams} g`,
-    price: formatPrice(heroProduct.price),
-    art: artOf(heroProduct),
-    swatch: heroVariant.swatch,
+  // hero showcase: four characters of the collection, each with its real colours
+  const MATERIAL_RO: Record<string, string> = { acetat: 'acetat', metal: 'metal', titan: 'titan', tr90: 'TR90', combinat: 'acetat + metal' }
+  const heroFrames: HeroFrame[] = ['mira-52', 'ada-53', 'iris-49', 'faleza-57']
+    .map((slug) => all.find((p) => p.slug === slug))
+    .filter((p): p is (typeof all)[number] => !!p)
+    .map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      kind: p.category === 'sun' ? 'soare' : MATERIAL_RO[p.material] ?? p.material,
+      spec: `${formatFrameSize(p)} · ${p.weightGrams} g`,
+      price: formatPrice(p.price),
+      art: artOf(p),
+      templeLength: p.templeLength,
+      variants: p.variants.map((v) => ({ name: v.colorName.replace(' translucid', ''), swatch: v.swatch })),
+    }))
+  if (!heroFrames.length && optical[0]) {
+    const p = optical[0]
+    heroFrames.push({ slug: p.slug, name: p.name, kind: p.material, spec: formatFrameSize(p), price: formatPrice(p.price), art: artOf(p), templeLength: p.templeLength, variants: p.variants.map((v) => ({ name: v.colorName, swatch: v.swatch })) })
   }
   const shapeCounts = optical.reduce<Record<string, number>>((acc, p) => ((acc[p.shape] = (acc[p.shape] ?? 0) + 1), acc), {})
   const featured = optical.filter((p) => p.featured).concat(optical.filter((p) => !p.featured)).slice(0, 8)
@@ -37,7 +45,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={[opticianLd(settings), faqLd(faqs.slice(0, 8))]} />
-      <HeroFocus frame={hero} />
+      <HeroFocus frames={heroFrames} />
       <TrustStrip settings={settings} />
       <ShapeBrowser counts={shapeCounts} />
       <Collection products={featured} eyebrow="Colecția SIFRA" title="Rame care se poartă toată ziua." href="/rame-de-vedere" label="Vezi toate ramele" />
