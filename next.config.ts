@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next'
 
 const isDev = process.env.NODE_ENV !== 'production'
+// served over plain HTTP (localhost, a LAN address) the browser must not be told to upgrade every request
+const isHttps = (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://')
 
 /**
  * Content-Security-Policy.
@@ -23,7 +25,7 @@ const csp = [
   `base-uri 'self'`,
   `form-action 'self' https://secure.netopia-payments.com https://secure-sandbox.netopia-payments.com https://checkout.stripe.com`,
   `object-src 'none'`,
-  ...(isDev ? [] : ['upgrade-insecure-requests']),
+  ...(isDev || !isHttps ? [] : ['upgrade-insecure-requests']),
 ].join('; ')
 
 const securityHeaders = [

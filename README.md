@@ -108,6 +108,36 @@ scripts/docker-up.sh    # pornește Postgres, aplică migrațiile, face build ș
 
 `docker-compose.yml` conține baza de date, aplicația (imagine *standalone*, utilizator fără privilegii, volum pentru fișiere încărcate) și un container care apelează mentenanța la 15 minute. Pune în față un reverse proxy cu HTTPS (Caddy, Nginx, Traefik) și setează `TRUSTED_PROXY_HOPS` la numărul de proxy-uri: IP-ul clientului (pentru limitări și jurnalul de audit) se ia din hop-ul adăugat de proxy, nu din valoarea trimisă de client.
 
+### Pe un calculator cu Linux Mint / Ubuntu
+
+**1. Docker** (o singură dată; Mint folosește depozitul Ubuntu pe care e bazat):
+
+```bash
+sudo apt-get update && sudo apt-get install -y ca-certificates curl openssl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$UBUNTU_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo usermod -aG docker "$USER"   # apoi deloghează-te și loghează-te din nou
+```
+
+Dacă ai și un PostgreSQL instalat direct pe sistem, oprește-l (`sudo systemctl disable --now postgresql`): containerul folosește portul 5432.
+
+**2. Configurare și pornire** (din folderul proiectului):
+
+```bash
+sh scripts/setup-env.sh http://localhost:3000      # sau adresa din rețea, ex. http://192.168.1.132:3000
+SEED_FLAGS=--demo sh scripts/docker-up.sh          # fără SEED_FLAGS: instalare curată, fără date demo
+```
+
+Adresa dată la `setup-env.sh` e singura de pe care merge autentificarea și e inclusă în build: dacă o schimbi în `.env`, rulează din nou `docker compose build app && docker compose up -d app`. Pe HTTP (localhost sau IP din rețea) site-ul funcționează normal; cu un domeniu pune Caddy în față (`reverse_proxy localhost:3000`, certificat HTTPS automat) și folosește `https://domeniu` ca adresă.
+
+Comenzi utile: `docker compose logs -f app`, `docker compose restart app`, `docker compose down` (datele rămân în volume). După un `git pull`: `docker compose --profile tools run --rm tools pnpm db:migrate`, apoi `docker compose build app && docker compose up -d app`.
+
+**Fără Docker:** PostgreSQL 15+ din `apt`, un utilizator și o bază `sifra`, apoi `pnpm install`, `sh scripts/setup-env.sh`, `pnpm db:migrate`, `pnpm db:seed:demo`, `pnpm build`, `pnpm start`. Pentru pornire automată, un serviciu systemd care rulează `pnpm start` în folderul proiectului.
+
+**`ECONNRESET` / `ECONNREFUSED` la `db:migrate`:** baza de date nu răspunde la adresa din `DATABASE_URL`. Verifică `docker compose ps` (containerul `db` trebuie să fie *healthy*) sau `pg_isready -h localhost -p 5432`, și că portul nu e ocupat de alt serviciu (`sudo ss -ltnp | grep 5432`).
+
 ### Vercel / alte platforme
 
 Funcționează cu `next build` + `next start` sau output *standalone*. Folosește stocare S3/R2 (`STORAGE_DRIVER=s3`) și programează `GET /api/cron/maintenance` la 15 minute cu antetul `Authorization: Bearer $CRON_SECRET` (Vercel Cron îl trimite automat).
