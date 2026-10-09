@@ -17,7 +17,7 @@ export function SectionHead({ eyebrow, title, intro, action, id }: { eyebrow?: s
     <div className="mb-10 flex flex-col gap-5 md:mb-12 md:flex-row md:items-end md:justify-between">
       <div className="max-w-3xl">
         {eyebrow ? <div className="eyebrow mb-3">{eyebrow}</div> : null}
-        <h2 id={id} className="disp focus-reveal text-[clamp(34px,4.6vw,60px)]">
+        <h2 id={id} data-split className="disp focus-reveal text-[clamp(34px,4.6vw,60px)]">
           {rich(title)}
         </h2>
         {intro ? <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-ink-2">{intro}</p> : null}
@@ -116,7 +116,7 @@ export function TryOnPromo({ frame }: { frame: Card }) {
       <div className="grid items-center gap-14 overflow-hidden rounded-[32px] bg-ink px-6 py-14 text-fog sm:px-12 lg:grid-cols-[1fr_420px] lg:py-20">
         <div>
           <div className="eyebrow text-fog/60">Probă virtuală · rulează în browser</div>
-          <h2 id="proba" className="disp focus-reveal mt-4 text-[clamp(38px,5.2vw,72px)]">
+          <h2 id="proba" data-split className="disp focus-reveal mt-4 text-[clamp(38px,5.2vw,72px)]">
             Probezi pe fața ta.
             <br />
             <em>La mărimea reală.</em>
@@ -177,7 +177,7 @@ export function Showroom({ settings }: { settings: StoreSettings }) {
       <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
         <div>
           <div className="eyebrow">Showroom · Galați</div>
-          <h2 id="showroom" className="disp focus-reveal mt-3 text-[clamp(34px,4.6vw,60px)]">
+          <h2 id="showroom" data-split className="disp focus-reveal mt-3 text-[clamp(34px,4.6vw,60px)]">
             Vino să le vezi
             <br />
             <em>în lumină naturală.</em>
@@ -271,7 +271,7 @@ export function B2BBand() {
         <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-end">
           <div>
             <div className="eyebrow text-white/70">Pentru optici și magazine</div>
-            <h2 id="b2b" className="disp mt-4 text-[clamp(34px,4.4vw,58px)]">
+            <h2 id="b2b" data-split className="disp mt-4 text-[clamp(34px,4.4vw,58px)]">
               Distribuim ramele SIFRA
               <br />
               <em>în toată România.</em>
@@ -335,7 +335,7 @@ export function FaqList({ faqs, title = 'Întrebări frecvente' }: { faqs: { id:
       <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr]">
         <div>
           <div className="eyebrow">Ajutor</div>
-          <h2 id="faq" className="disp focus-reveal mt-3 text-[clamp(32px,4vw,52px)]">
+          <h2 id="faq" data-split className="disp focus-reveal mt-3 text-[clamp(32px,4vw,52px)]">
             {title}
           </h2>
           <Link href="/contact" className="mt-6 inline-flex items-center gap-2 font-bold text-cobalt no-underline hover:underline">

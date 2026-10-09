@@ -23,7 +23,7 @@ export function ProductCard({ product: p, initialVariant, eager }: { product: Ca
 
   return (
     <article className="group relative flex flex-col">
-      <Link href={href} className="relative block no-underline" aria-label={`${p.name}, ${v.colorName}, ${formatPrice(p.price + v.priceDelta)}`}>
+      <Link href={href} data-cursor-hide className="relative block no-underline" aria-label={`${p.name}, ${v.colorName}, ${formatPrice(p.price + v.priceDelta)}`}>
         <div
           ref={box}
           className="card-glint relative aspect-[5/4] overflow-hidden rounded-[var(--radius-card)] bg-glass ring-1 ring-line-soft ring-inset transition-shadow duration-300 group-hover:shadow-[var(--shadow-lift)]"

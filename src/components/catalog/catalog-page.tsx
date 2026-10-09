@@ -94,7 +94,7 @@ async function Results({ category, searchParams, preset }: { category: 'optical'
             {r.items.length ? (
               <ul className="grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">
                 {r.items.map((p, i) => (
-                  <li key={p.id}>
+                  <li key={p.id} data-flip-id={p.id}>
                     <ProductCard product={p} eager={i < 3} initialVariant={filters.color.length ? p.variants.find((v) => filters.color.includes(v.colorFamily))?.id : undefined} />
                   </li>
                 ))}

@@ -1,21 +1,29 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { createContext, use, useRef, useState, useTransition } from 'react'
+import { createContext, use, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react'
 import { Icon } from '@/components/icons'
+import { onFirstInteraction } from '@/lib/interaction'
+import { captureFlip, loadFlip, playFlip } from '@/lib/motion/flip'
 import { shapeIconSrc } from '@/lib/frame-images'
 import { cn } from '@/lib/cn'
 import { activeFilterCount, AUDIENCES, COLOR_FAMILIES, FEATURES, filtersToQuery, FITS, MATERIALS, RIMS, SHAPES, SORTS, type CatalogFilters } from '@/lib/catalog-filters'
 import type { Facets } from '@/lib/catalog-query'
 
-const PendingCtx = createContext<{ pending: boolean; go: (f: CatalogFilters) => void } | null>(null)
+const PendingCtx = createContext<{ pending: boolean; go: (f: CatalogFilters) => void; flipRef: React.RefObject<ReturnType<typeof captureFlip>> } | null>(null)
 
 /** Shares navigation state between the filter panel and the results grid (dims while loading). */
 export function CatalogNav({ basePath, children }: { basePath: string; children: React.ReactNode }) {
   const router = useRouter()
   const [pending, start] = useTransition()
-  const go = (f: CatalogFilters) => start(() => router.push(`${basePath}${filtersToQuery({ ...f, page: 1 })}`, { scroll: false }))
-  return <PendingCtx value={{ pending, go }}>{children}</PendingCtx>
+  // where every card was before the filter changed — the grid animates from there (GSAP Flip)
+  const flipRef = useRef<ReturnType<typeof captureFlip>>(null)
+  const go = (f: CatalogFilters) => {
+    flipRef.current = captureFlip(document.querySelector('[data-flip-root]'))
+    start(() => router.push(`${basePath}${filtersToQuery({ ...f, page: 1 })}`, { scroll: false }))
+  }
+  useEffect(() => onFirstInteraction(() => void loadFlip()), [])
+  return <PendingCtx value={{ pending, go, flipRef }}>{children}</PendingCtx>
 }
 
 function useNav() {
@@ -25,9 +33,15 @@ function useNav() {
 }
 
 export function ResultsShell({ children }: { children: React.ReactNode }) {
-  const { pending } = useNav()
+  const { pending, flipRef } = useNav()
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (pending || !flipRef.current) return
+    playFlip(flipRef.current, ref.current)
+    flipRef.current = null
+  }, [pending, children, flipRef])
   return (
-    <div aria-busy={pending} className={cn('transition-[opacity,filter] duration-300', pending && 'pointer-events-none opacity-50 blur-[2px]')}>
+    <div ref={ref} data-flip-root aria-busy={pending} className={cn('transition-[opacity,filter] duration-300', pending && 'pointer-events-none opacity-50 blur-[2px]')}>
       {children}
     </div>
   )

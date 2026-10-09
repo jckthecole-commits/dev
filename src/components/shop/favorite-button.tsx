@@ -1,11 +1,14 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Icon } from '@/components/icons'
+import { notify } from '@/components/site/toasts'
 import { cn } from '@/lib/cn'
 import { useFavorites } from '@/lib/favorites'
 
 export function FavoriteButton({ slug, name, className, withLabel }: { slug: string; name: string; className?: string; withLabel?: boolean }) {
   const fav = useFavorites()
+  const router = useRouter()
   const on = fav.has(slug)
   return (
     <button
@@ -16,6 +19,11 @@ export function FavoriteButton({ slug, name, className, withLabel }: { slug: str
         e.preventDefault()
         e.stopPropagation()
         fav.toggle(slug)
+        notify((toast) =>
+          on
+            ? toast('Scoasă din favorite', { description: name, action: { label: 'Anulează', onClick: () => fav.toggle(slug) } })
+            : toast('Salvată la favorite', { description: name, action: { label: 'Vezi lista', onClick: () => router.push('/favorite') } }),
+        )
       }}
       className={cn('inline-flex items-center justify-center gap-2 rounded-full transition-[transform,background-color] active:scale-90', withLabel ? 'btn btn-ghost btn-sm' : 'size-10 bg-glass/80 backdrop-blur hover:bg-glass', className)}
     >

@@ -158,6 +158,7 @@ export function ProductView({ product: p, initialColor, productionDays }: { prod
             <canvas
               ref={canvasRef}
               tabIndex={shown === '3d' ? 0 : -1}
+              data-cursor="Rotește"
               aria-hidden={shown !== '3d'}
               aria-label={`${p.name}, ${v.colorName}, în 3D. Trage sau folosește săgețile ca s-o rotești; dublu clic o readuce din față.`}
               className={cn('absolute inset-0 h-full w-full cursor-grab touch-pan-y outline-none transition-opacity duration-700 focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-inset active:cursor-grabbing', shown === '3d' ? 'opacity-100' : 'pointer-events-none opacity-0')}

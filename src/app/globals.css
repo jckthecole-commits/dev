@@ -30,7 +30,6 @@
   --font-sans: var(--font-text), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-mona), 'Arial', sans-serif;
   --font-mono: var(--font-code), ui-monospace, 'SFMono-Regular', monospace;
-  --font-serif: var(--font-bodoni), 'Didot', 'Bodoni 72', serif;
 
   --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -150,16 +149,16 @@
   letter-spacing: -0.02em;
   line-height: 0.95;
 }
-/* Italic Bodoni accent inside display headings: <h2 class="disp">Rame care se <em>poartă</em> toată ziua.</h2> */
+/* Accent words inside display headings: <h2 class="disp">Rame care se poartă <em>toată ziua.</em></h2>
+   — the same face, lighter, at normal width and slanted. */
 .disp em,
 .hero-accent,
 .accent-serif {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 520;
   font-stretch: normal;
   letter-spacing: -0.01em;
-  font-variation-settings: 'opsz' 96;
 }
 .disp em {
   font-size: 1.06em;
@@ -167,21 +166,15 @@
   padding-right: 0.04em;
 }
 .hero-accent-inline {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 600;
   font-size: 1.12em;
-  font-variation-settings: 'opsz' 24;
 }
 
 @utility disp-wide {
   font-family: var(--font-display);
   font-stretch: 125%;
-}
-/* Kinetic width: the variable-width display face is attached after load, so the first
-   paint only needs the small static one (same metrics at 112 %, so nothing jumps). */
-:root[data-type='flex'] :is(.disp-wide, .type-flex, .morph-row-name, .morph-name) {
-  font-family: var(--font-mona-flex), var(--font-display);
 }
 @utility eyebrow {
   font-family: var(--font-mono);
@@ -881,10 +874,10 @@
 .anat-intro h2 em,
 .anat-value,
 .anat-weight {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-style: italic;
-  font-weight: 520;
-  font-variation-settings: 'opsz' 96;
+  font-weight: 560;
+  font-stretch: normal;
 }
 .anat-cards {
   display: grid;
@@ -1297,4 +1290,317 @@ html.lenis body {
 }
 .lenis.lenis-smooth iframe {
   pointer-events: none;
+}
+
+/* ── Motion layer ────────────────────────────────────────────────────────── */
+/* split text pieces (GSAP SplitText) keep the heading's own look */
+.sx-word {
+  white-space: nowrap;
+}
+
+/* Marquee band */
+.marquee {
+  overflow: hidden;
+  padding-block: clamp(28px, 5vw, 64px);
+  border-block: 1px solid var(--color-line);
+  --skew: 0deg;
+}
+.mq-skew {
+  transform: skewX(var(--skew));
+  will-change: transform;
+}
+.mq-track {
+  display: flex;
+  width: max-content;
+}
+.mq-row {
+  display: flex;
+  flex: none;
+}
+.mq-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32em;
+  padding-right: 0.32em;
+  font-family: var(--font-display);
+  font-size: clamp(56px, 10.5vw, 168px);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+/* every other phrase in the light, slanted cut of the same face (variable fonts can't take an outline stroke cleanly) */
+.mq-outline {
+  font-style: italic;
+  font-weight: 400;
+  font-stretch: 100%;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--color-graphite);
+}
+.mq-lens {
+  width: 0.62em;
+  height: 0.62em;
+  flex: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mq-track {
+    animation: mq 46s linear infinite;
+  }
+}
+@keyframes mq {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Manifesto */
+.manifesto {
+  max-width: 21ch;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5.2vw, 84px);
+  font-weight: 640;
+  font-stretch: 104%;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+.manifesto em {
+  font-style: italic;
+  font-weight: 520;
+  font-stretch: normal;
+}
+
+/* Collection rail: a strip you swipe; on desktop the page scroll slides it sideways */
+.rail {
+  padding-block: 48px;
+  --card: clamp(260px, 78vw, 340px);
+}
+.rail-viewport {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-inline: var(--gutter);
+  scroll-padding-inline: var(--gutter);
+}
+.rail-viewport::-webkit-scrollbar {
+  display: none;
+}
+.rail-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  padding-bottom: 8px;
+}
+.rail-card {
+  position: relative;
+  width: var(--card);
+  scroll-snap-align: start;
+}
+.rail-index {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--color-mist);
+}
+.rail-progress {
+  display: none;
+}
+@supports (animation-timeline: view()) {
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .rail {
+      --card: clamp(300px, 25vw, 400px);
+      --gap: 32px;
+      /* vertical room = how far the strip has to travel sideways */
+      height: calc(100svh + var(--n) * (var(--card) + var(--gap)) - 100vw + 2 * var(--gutter));
+      padding: 0;
+      view-timeline: --rail block;
+    }
+    .rail-sticky {
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100svh - var(--header-h));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .rail-viewport {
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+    .rail-track {
+      gap: var(--gap);
+      animation: rail linear both;
+      animation-timeline: --rail;
+      animation-range: contain 3% contain 97%;
+    }
+    .rail-card:nth-child(even) {
+      margin-top: 56px;
+    }
+    .rail-progress {
+      display: block;
+      margin-top: 36px;
+    }
+    .rail-progress span {
+      display: block;
+      height: 2px;
+      background: var(--color-ink);
+      transform-origin: left;
+      animation: rail-bar linear both;
+      animation-timeline: --rail;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+}
+@keyframes rail {
+  to {
+    transform: translateX(calc(-100% + 100vw - 2 * var(--gutter)));
+  }
+}
+@keyframes rail-bar {
+  from {
+    transform: scaleX(0.04);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Footer: the giant wordmark that reacts to the cursor */
+.footer-kinetic {
+  overflow: hidden;
+  padding: 0 var(--gutter) 8px;
+  font-family: var(--font-display);
+  font-size: clamp(48px, 11.6vw, 196px);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.03em;
+  line-height: 0.8;
+  white-space: nowrap;
+  color: rgb(255 255 255 / 0.06);
+  user-select: none;
+}
+.kx-char {
+  --w: 300;
+  --s: 80;
+  --a: 0.07;
+  font-variation-settings:
+    'wght' var(--w),
+    'wdth' var(--s);
+  color: rgb(255 255 255 / var(--a));
+}
+
+/* Lens cursor (desktop): trails the pointer, grows on anything clickable, reads [data-cursor] */
+.lens-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    width 0.35s var(--ease-out-expo),
+    height 0.35s var(--ease-out-expo),
+    opacity 0.3s,
+    background-color 0.3s,
+    border-color 0.3s;
+}
+.lens-cursor[data-on] {
+  opacity: 1;
+}
+.lens-cursor[data-mode='link'] {
+  width: 58px;
+  height: 58px;
+  border-width: 1px;
+}
+.lens-cursor[data-mode='label'] {
+  width: 84px;
+  height: 84px;
+  border-color: transparent;
+  background: var(--color-cobalt);
+  mix-blend-mode: normal;
+}
+.lens-cursor[data-mode='hide'] {
+  opacity: 0;
+  width: 12px;
+  height: 12px;
+}
+.lens-cursor.is-down {
+  width: 22px;
+  height: 22px;
+}
+.lens-cursor__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* Page transitions: the old page drops out of focus, the new one pulls into it */
+::view-transition-old(.page-out) {
+  animation: page-out 0.28s var(--ease-in-out-soft) both;
+}
+::view-transition-new(.page-in) {
+  animation: page-in 0.55s var(--ease-out-expo) 0.08s both;
+}
+@keyframes page-out {
+  to {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(0.985);
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    filter: blur(12px);
+    transform: scale(1.012);
+  }
+}
+
+/* Toasts (Sonner, unstyled → ours) */
+.sv-toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 14px 14px 14px 18px;
+  border-radius: 18px;
+  background: var(--color-ink);
+  color: var(--color-fog);
+  box-shadow: 0 24px 60px -24px rgb(13 18 22 / 0.55);
+}
+.sv-toast-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.sv-toast-desc {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgb(238 241 239 / 0.7);
+}
+.sv-toast-action {
+  margin-left: auto;
+  flex: none;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--color-fog);
+  color: var(--color-ink);
+  font-weight: 700;
+  font-size: 13.5px;
 }

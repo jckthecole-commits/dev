@@ -208,7 +208,7 @@ export function ShapeMorph({ shapes }: { shapes: MorphShape[] }) {
     <section ref={sectionRef} aria-labelledby="forme" className="cv-auto container-x py-24">
       <div className="mb-10 max-w-3xl md:mb-12">
         <div className="eyebrow mb-3">Rame de vedere</div>
-        <h2 id="forme" className="disp focus-reveal text-[clamp(34px,4.6vw,60px)]">
+        <h2 id="forme" data-split className="disp focus-reveal text-[clamp(34px,4.6vw,60px)]">
           Caută după <em>formă.</em>
         </h2>
         <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-ink-2">Forma ramei schimbă proporțiile feței mai mult decât culoarea. Treci peste o formă și uite cum se schimbă rama — cu cotele ei reale.</p>

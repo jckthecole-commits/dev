@@ -139,7 +139,8 @@ export async function SiteFooter() {
           </div>
         </div>
       </div>
-      <div aria-hidden className="type-flex pointer-events-none select-none overflow-hidden whitespace-nowrap px-[var(--gutter)] pb-2 font-display text-[clamp(48px,12.2vw,200px)] font-extrabold leading-[.78] tracking-[-0.03em] text-white/[.04]" style={{ fontStretch: '125%' }}>
+      {/* giant wordmark: once the motion layer is up, letters gain weight and width near the cursor */}
+      <div aria-hidden data-kinetic className="footer-kinetic">
         SIFRA VISION
       </div>
     </footer>

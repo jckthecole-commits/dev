@@ -30,3 +30,5 @@ coverage/
 public/vendor/mediapipe/wasm/
 .next-*/
 .playwright/
+
+__pycache__/

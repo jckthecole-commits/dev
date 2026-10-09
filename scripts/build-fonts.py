@@ -8,11 +8,11 @@ Sources (github.com/google/fonts, ofl/):
     monasans/MonaSans[wdth,wght].ttf
     atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext[wght].ttf
     atkinsonhyperlegiblemono/AtkinsonHyperlegibleMono[wght].ttf
-    bodonimoda/BodoniModa-Italic[opsz,wght].ttf
 
-Each font is pinned to the instance the site uses, subset to Latin + Romanian and
-stripped of hinting: ~60 KB for the whole first paint instead of ~300 KB. Mona Sans
-carries a Reserved Font Name, so the modified build is renamed ("SV Display").
+Each font keeps its full variable axes (every weight, Mona's width axis for the kinetic
+type), subset to Latin + Romanian and stripped of hinting: ~120 KB for all three
+instead of ~300 KB from the font CDN. Mona Sans carries a Reserved Font Name, so the
+modified build is renamed ("SV Display").
 """
 import os
 import sys
@@ -60,9 +60,6 @@ if __name__ == '__main__':
     s = lambda name: os.path.join(src_dir, name)
     o = lambda name: os.path.join(out_dir, name)
     mona = ('Mona Sans', 'SV Display')
-    build(s('MonaSans[wdth,wght].ttf'), o('display.woff2'), {'wght': 740, 'wdth': 112}, DISPLAY, mona)
-    build(s('MonaSans[wdth,wght].ttf'), o('display-wdth.woff2'), {'wght': 740, 'wdth': (90, 125)}, DISPLAY, mona)
-    build(s('AtkinsonHyperlegibleNext[wght].ttf'), o('text-400.woff2'), {'wght': 400}, FULL)
-    build(s('AtkinsonHyperlegibleNext[wght].ttf'), o('text-700.woff2'), {'wght': 700}, FULL)
-    build(s('AtkinsonHyperlegibleMono[wght].ttf'), o('mono-400.woff2'), {'wght': 400}, FULL)
-    build(s('BodoniModa-Italic[opsz,wght].ttf'), o('serif-italic.woff2'), {'wght': 540, 'opsz': 72}, DISPLAY)
+    build(s('MonaSans[wdth,wght].ttf'), o('display.woff2'), None, DISPLAY, mona)
+    build(s('AtkinsonHyperlegibleNext[wght].ttf'), o('text.woff2'), None, FULL)
+    build(s('AtkinsonHyperlegibleMono[wght].ttf'), o('mono.woff2'), None, FULL)

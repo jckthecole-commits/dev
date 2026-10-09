@@ -5,36 +5,21 @@ import { onFirstInteraction } from '@/lib/interaction'
 
 /** Small site-wide extras that never compete with the first paint. */
 export function SiteEnhancements() {
-  // kinetic type: attach the variable-width display face once the page has loaded
+  // the motion layer (GSAP, SplitText, ScrollTrigger, Lenis, lens cursor) — loaded on the first interaction
   useEffect(() => {
-    const go = () => (document.documentElement.dataset.type = 'flex')
-    const later = () => (typeof requestIdleCallback === 'function' ? requestIdleCallback(go, { timeout: 2500 }) : setTimeout(go, 300))
-    if (document.readyState === 'complete') later()
-    else window.addEventListener('load', later, { once: true })
-    return () => window.removeEventListener('load', later)
-  }, [])
-
-  // inertial scrolling (Lenis) for mouse & trackpad — loaded on the first interaction, never on touch
-  useEffect(() => {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    let lenis: { destroy: () => void } | null = null
+    let cleanup: (() => void) | null = null
     let cancelled = false
     const stop = onFirstInteraction(async () => {
-      const { default: Lenis } = await import('lenis')
+      const { boot } = await import('@/lib/motion/boot')
       if (cancelled) return
-      lenis = new Lenis({
-        autoRaf: true,
-        lerp: 0.11,
-        anchors: { offset: -88 },
-        // dialogs and inner scrollers keep their own native scrolling
-        prevent: (node: HTMLElement) => !!node.closest('dialog, [data-lenis-prevent]'),
-      })
+      cleanup = await boot()
+      if (cancelled) cleanup()
     })
     return () => {
       cancelled = true
       stop()
-      lenis?.destroy()
+      cleanup?.()
     }
   }, [])
 

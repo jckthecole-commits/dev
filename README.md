@@ -39,9 +39,9 @@ Magazin online, configurator de lentile, probă virtuală, programări, portal B
 | Date | PostgreSQL 15+, Drizzle ORM, migrații în `drizzle/` |
 | Autentificare | Better Auth (e-mail + parolă, opțional Google) |
 | Stil | Tailwind CSS v4, tokeni în `src/app/globals.css` |
-| Fonturi | Mona Sans (titluri, lățime variabilă) · Bodoni Moda italic (accente) · Atkinson Hyperlegible Next & Mono (text și specificații — desenat de Braille Institute pentru persoane cu vedere slabă) |
+| Fonturi | Mona Sans (titluri, variabil pe greutate și lățime; accentele sunt oblicul lui) · Atkinson Hyperlegible Next & Mono (text și specificații — desenat de Braille Institute pentru persoane cu vedere slabă) |
 | 3D | three.js (+ depth of field și bloom în „Anatomia ramei”, doar desktop), încărcat la prima interacțiune |
-| Scroll | Lenis (inerțial, doar mouse/trackpad), încărcat la prima interacțiune |
+| Mișcare | GSAP (SplitText, ScrollTrigger, Flip) + Lenis (scroll inerțial pe mouse/trackpad), încărcate la prima interacțiune · Sonner pentru notificări · View Transitions între pagini |
 | Plăți | Netopia Payments API v2 (IPN semnat JWT RS512), Stripe Checkout |
 | Facturare | SmartBill Cloud → e-Factura (SPV) |
 | Fișiere | disc local sau S3 / Cloudflare R2; rețetele criptate AES-256-GCM |
@@ -148,10 +148,10 @@ Lista completă, cu bife, e în **Admin → Lansare & integrări**. Pe scurt:
 
 ## Performanță
 
-Măsurat cu Lighthouse (mobil, throttling simulat) pe build-ul de producție: catalog și pagina de produs 96–99, acasă ~95 (89–98 între rulări), desktop 98–99. Ce o ține așa:
+Măsurat cu Lighthouse (mobil, throttling simulat) pe build-ul de producție: catalog și pagina de produs ~98, acasă ~90 (89–94 între rulări), desktop 99–100. Ce o ține așa:
 
-- **Fonturi** găzduite local, subsetate (latin + diacritice românești, fără hinting) și fixate pe instanțele folosite: ~60 KB la primul paint. Fața cu lățime variabilă (tipografia cinetică) se atașează după `load`. Le regenerezi cu `scripts/build-fonts.py`; licențele OFL sunt în `src/fonts`.
-- **3D, Lenis și post-procesarea** se încarcă abia la prima interacțiune (`src/lib/interaction.ts`); versiunile CSS/SVG sunt complete fără ele.
+- **Fonturi** variabile găzduite local, subsetate (latin + diacritice românești, fără hinting): ~120 KB în total față de ~300 KB de pe CDN. Le regenerezi cu `scripts/build-fonts.py`; licențele OFL sunt în `src/fonts`.
+- **3D, GSAP, Lenis, post-procesarea și notificările** se încarcă abia la prima interacțiune (`src/lib/interaction.ts`, `src/lib/motion/boot.ts`); versiunile CSS/SVG sunt complete fără ele. Galeria orizontală a colecției e CSS scroll-driven, fără JS.
 - **Desenele ramelor din carduri** sunt imagini SVG generate (`/imagini/rame/<slug>/<culoare>.svg?v=…`, cache permanent), nu SVG inline — DOM mai mic, nimic de calculat la hidratare.
 - **Secțiunile de sub hero** sunt granițe `<Suspense>` (hidratate pe rând, fără task-uri lungi) cu `content-visibility: auto`.
 - Fără overlay de intro, fără bucle JS per cadru la încărcare; animațiile de repaus rulează pe compozitor.

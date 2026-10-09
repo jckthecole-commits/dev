@@ -3,6 +3,7 @@ import { ConsentManager } from '@/components/site/consent'
 import { SiteFooter } from '@/components/site/footer'
 import { SiteHeader } from '@/components/site/header'
 import { SiteEnhancements } from '@/components/site/enhancements'
+import { LazyToaster } from '@/components/site/toasts'
 import { JsonLd } from '@/components/seo/json-ld'
 import { organizationLd, websiteLd } from '@/lib/seo'
 import { getSettings } from '@/server/settings'
@@ -22,6 +23,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </Suspense>
       <ConsentManager />
       <SiteEnhancements />
+      <LazyToaster />
     </>
   )
 }

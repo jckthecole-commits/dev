@@ -296,7 +296,7 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
       <canvas ref={canvasRef} aria-hidden className="hero-gl" />
 
       {/* layout anchor + CSS 3D fallback */}
-      <div ref={anchorRef} aria-hidden className="hero-frame absolute z-[8]" style={{ perspective: 1400 }}>
+      <div ref={anchorRef} aria-hidden data-cursor={gl ? 'Trage' : undefined} className="hero-frame absolute z-[8]" style={{ perspective: 1400 }}>
         <div className="hero-frame-art pointer-events-none">
           <div className="animate-float" style={{ transformStyle: 'preserve-3d' }}>
             <div className="frame3d-sway" style={{ transformStyle: 'preserve-3d' }}>

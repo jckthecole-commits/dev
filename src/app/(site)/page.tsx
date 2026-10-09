@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { AnatomySection, type AnatomyData } from '@/components/home/anatomy'
+import { CollectionRail, Manifesto, Marquee } from '@/components/home/motion-sections'
 import { HeroFocus, type HeroFrame } from '@/components/home/hero'
 import { B2BBand, Collection, FaqList, HowItWorks, JournalTeaser, SectionHead, Showroom, TrustStrip, TryOnPromo } from '@/components/home/sections'
 import { ShapeMorph, type MorphShape } from '@/components/home/shape-morph'
@@ -76,7 +77,13 @@ export default async function HomePage() {
         <ShapeMorph shapes={morphShapes} />
       </Suspense>
       <Suspense>
-        <Collection products={featured} eyebrow="Colecția SIFRA" title="Rame care se poartă *toată ziua.*" href="/rame-de-vedere" label="Vezi toate ramele" />
+        <Marquee items={['Rame de vedere', 'Ochelari de soare', 'Lentile pe rețetă', 'Probă virtuală', 'Showroom Galați']} />
+      </Suspense>
+      <Suspense>
+        <CollectionRail products={featured} eyebrow="Colecția SIFRA" title="Rame care se poartă *toată ziua.*" href="/rame-de-vedere" label="Vezi toate ramele" />
+      </Suspense>
+      <Suspense>
+        <Manifesto />
       </Suspense>
       {anatomy ? (
         <Suspense>
