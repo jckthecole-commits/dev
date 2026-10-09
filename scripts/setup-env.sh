@@ -19,5 +19,8 @@ set_var NEXT_PUBLIC_SITE_URL "$SITE"
 set_var BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
 set_var DATA_ENCRYPTION_KEY "$(openssl rand -base64 32)"
 set_var CRON_SECRET "$(openssl rand -hex 24)"
+# a port in the address (other than 3000) is the port docker-compose serves the site on
+PORT=$(printf '%s' "$SITE" | sed -n 's|^https*://[^/:]*:\([0-9]*\).*|\1|p')
+if [ -n "$PORT" ] && [ "$PORT" != 3000 ]; then sed -i "s|^# APP_PORT=.*|APP_PORT=$PORT|" .env; fi
 echo "✓ .env created for $SITE"
 echo "  Payments, e-mail and invoicing stay off until you fill them in (.env)."

@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1.7
 # Sifra Vision — production image (Next.js standalone output).
 #
-# The build prerenders the catalogue (Partial Prerendering), so it needs to reach
-# PostgreSQL. Build with the database reachable, e.g.:
+# The build prerenders the catalogue (Partial Prerendering), so it needs to reach a
+# migrated and seeded PostgreSQL. Build with the database reachable, e.g.:
 #   docker build --network=host --build-arg DATABASE_URL=postgres://… \
 #                --build-arg NEXT_PUBLIC_SITE_URL=https://sifravision.ro -t sifra-vision .
-# or use scripts/docker-up.sh with docker-compose.
+# or use scripts/docker-up.sh with docker-compose (it runs the steps in that order).
 
 ARG NODE_VERSION=22
 
@@ -19,9 +19,17 @@ COPY package.json pnpm-lock.yaml ./
 COPY scripts/vendor.mjs scripts/vendor.mjs
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 
-FROM base AS build
+FROM base AS source
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Migrations, seeding and the admin CLI (tsx + drizzle). No Next build here, so it
+# works against an empty database:
+#   docker compose run --rm tools pnpm db:migrate
+FROM source AS tools
+CMD ["pnpm", "db:migrate"]
+
+FROM source AS build
 ARG DATABASE_URL
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ARG NEXT_PUBLIC_GA_ID=
@@ -32,12 +40,10 @@ ENV DATABASE_URL=$DATABASE_URL \
     NEXT_PUBLIC_GA_ID=$NEXT_PUBLIC_GA_ID \
     NEXT_PUBLIC_META_PIXEL_ID=$NEXT_PUBLIC_META_PIXEL_ID \
     NEXT_PUBLIC_MEDIA_BASE_URL=$NEXT_PUBLIC_MEDIA_BASE_URL
-RUN pnpm build
-
-# Migrations, seeding and the admin CLI (has tsx + drizzle):
-#   docker compose run --rm tools pnpm db:migrate
-FROM build AS tools
-CMD ["pnpm", "db:migrate"]
+# Better Auth refuses its built-in secret in production. Nothing is signed while
+# prerendering, so the build gets a throwaway one; the real secret comes from the
+# environment at runtime and never enters the image.
+RUN BETTER_AUTH_SECRET="$(head -c 32 /dev/urandom | base64)" pnpm build
 
 FROM node:${NODE_VERSION}-alpine AS runner
 WORKDIR /app
@@ -50,5 +56,5 @@ RUN mkdir -p /app/storage /app/.data && chown -R app:app /app/storage /app/.data
 USER app
 VOLUME ["/app/storage"]
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD wget -qO- http://127.0.0.1:3000/robots.txt >/dev/null || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD wget -qO- "http://127.0.0.1:${PORT}/robots.txt" >/dev/null || exit 1
 CMD ["node", "server.js"]

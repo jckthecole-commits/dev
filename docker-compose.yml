@@ -1,21 +1,30 @@
 # Local / single-server deployment: PostgreSQL + app + scheduled maintenance.
-# First run: scripts/docker-up.sh (starts the database, migrates, builds, starts).
+# First run: scripts/docker-up.sh (starts the database, migrates, seeds, builds, starts).
+#
+# Everything runs on the host's network: PostgreSQL listens on localhost only, the site
+# on APP_PORT. There is no Docker bridge or port proxy in between, so the image build
+# reaches the database the same way the app does, and VPNs or firewalls on a desktop
+# can't cut the path. Ports are set in .env (DB_PORT, APP_PORT) if the defaults are taken.
 name: sifra-vision
+
+x-db-url: &db-url postgres://sifra:${POSTGRES_PASSWORD:-sifra}@127.0.0.1:${DB_PORT:-5432}/sifra
 
 services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    network_mode: host
+    command: ['postgres', '-c', 'listen_addresses=127.0.0.1', '-c', 'port=${DB_PORT:-5432}']
     environment:
       POSTGRES_USER: sifra
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sifra}
       POSTGRES_DB: sifra
-    ports: ['127.0.0.1:5432:5432']
+      PGPORT: ${DB_PORT:-5432}
     volumes: [db:/var/lib/postgresql/data]
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U sifra -d sifra']
-      interval: 5s
-      retries: 20
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U sifra -d sifra']
+      interval: 2s
+      retries: 30
 
   tools:
     profiles: [tools]
@@ -23,41 +32,45 @@ services:
       context: .
       target: tools
       network: host
-      args:
-        DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@127.0.0.1:5432/sifra
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    network_mode: host
     env_file: [.env]
     environment:
-      DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@db:5432/sifra
+      DATABASE_URL: *db-url
     depends_on:
       db: { condition: service_healthy }
 
   app:
+    image: sifra-vision-app
     build:
       context: .
       target: runner
       network: host
       args:
-        DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@127.0.0.1:5432/sifra
+        DATABASE_URL: *db-url
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
         NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
         NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
     restart: unless-stopped
+    network_mode: host
     env_file: [.env]
     environment:
-      DATABASE_URL: postgres://sifra:${POSTGRES_PASSWORD:-sifra}@db:5432/sifra
+      DATABASE_URL: *db-url
       STORAGE_DIR: /app/storage
-    ports: ['3000:3000']
+      PORT: ${APP_PORT:-3000}
     volumes: [uploads:/app/storage]
     depends_on:
       db: { condition: service_healthy }
 
   # Every 15 minutes: expire unpaid card orders, appointment reminders, cleanup.
+  # Runs on the app's own image (busybox wget is all it needs): nothing else to pull.
   cron:
-    image: curlimages/curl:8.11.1
+    image: sifra-vision-app
+    pull_policy: never
     restart: unless-stopped
+    network_mode: host
     env_file: [.env]
-    entrypoint: ['/bin/sh', '-c', 'while true; do sleep 900; curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/maintenance || true; echo; done']
+    healthcheck: { disable: true }
+    entrypoint: ['/bin/sh', '-c', 'while true; do sleep 900; wget -qO- --header "Authorization: Bearer $$CRON_SECRET" http://127.0.0.1:${APP_PORT:-3000}/api/cron/maintenance || true; echo; done']
     depends_on: [app]
 
 volumes:
