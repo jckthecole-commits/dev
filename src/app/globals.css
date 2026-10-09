@@ -1604,3 +1604,315 @@ html.lenis body {
   font-weight: 700;
   font-size: 13.5px;
 }
+
+/* ── Groapa cu rame (physics heap) ───────────────────────────────────────── */
+.pit {
+  position: relative;
+  padding-top: 96px;
+  overflow: hidden;
+  --k: 0.84px; /* px per millimetre — every frame keeps its true size relative to the others */
+}
+@media (min-width: 768px) {
+  .pit {
+    --k: 1.5px;
+  }
+}
+@media (min-width: 1280px) {
+  .pit {
+    --k: 1.85px;
+  }
+}
+.pit-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px 40px;
+  margin-bottom: 20px;
+}
+.pit-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+.pit-box {
+  position: relative;
+  height: clamp(480px, 76svh, 820px);
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-line);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pit-box[data-grabbing] {
+  cursor: grabbing !important;
+}
+.pit-word {
+  position: absolute;
+  left: var(--gutter);
+  bottom: 5%;
+  font-family: var(--font-display);
+  font-size: clamp(76px, 19vw, 320px);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.045em;
+  line-height: 0.8;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-line-soft);
+  pointer-events: none;
+}
+.pit-frame {
+  position: absolute;
+  display: block;
+  width: calc(var(--mm) * var(--k));
+  translate: -50% 0;
+  -webkit-user-drag: none;
+}
+.pit-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 12px rgb(13 18 22 / 0.16));
+}
+.pit[data-live]:not([data-running]) .pit-frame {
+  opacity: 0;
+}
+.pit[data-running] .pit-frame {
+  left: 0 !important;
+  top: 0;
+  bottom: auto !important;
+  translate: none;
+  rotate: none !important;
+  will-change: transform;
+}
+.pit-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: -14px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-fog);
+  font-size: 14px;
+  white-space: nowrap;
+  text-decoration: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.pit-tag span {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgb(238 241 239 / 0.7);
+}
+.pit-tag[data-on] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Anatomy: you go in through a lens — a dark disc rises with the section, the glasses
+   visible inside it, then it opens to the whole screen as the stage pins (CSS only) */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .anat[data-mode='gl'] {
+      background: transparent;
+      view-timeline: --anat block;
+    }
+    .anat[data-mode='gl'] .anat-stage {
+      background: #0b0f13;
+      animation: lens-open linear both;
+      animation-timeline: --anat;
+      animation-range: contain 0% contain 7%;
+    }
+  }
+}
+@keyframes lens-open {
+  from {
+    clip-path: circle(min(17vmin, 150px) at 50% 52%);
+  }
+  to {
+    clip-path: circle(75vmax at 50% 52%);
+  }
+}
+
+/* ── Facts band: a spec sheet, not a row of icon tiles ───────────────────── */
+.facts {
+  border-block: 1px solid var(--color-line);
+}
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.facts-grid > li {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 26px 16px 28px 0;
+  border-top: 1px solid var(--color-line);
+}
+.facts-grid > li:nth-child(-n + 2) {
+  border-top: 0;
+}
+.facts-grid > li:nth-child(even) {
+  padding-left: 16px;
+  border-left: 1px solid var(--color-line);
+}
+.fact-fig {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5.4vw, 84px);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+.fact-fig small {
+  margin-left: 0.12em;
+  font-size: 0.34em;
+  font-weight: 600;
+  font-stretch: 100%;
+  letter-spacing: 0;
+}
+.fact-title {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.fact-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-graphite);
+}
+@media (min-width: 1024px) {
+  .facts-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .facts-grid > li {
+    padding: 34px 28px 36px;
+    border-top: 0;
+    border-left: 1px solid var(--color-line);
+  }
+  .facts-grid > li:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+/* ── How it works: panels that stack as you scroll ───────────────────────── */
+.stack {
+  display: grid;
+  gap: 18px;
+}
+.stack-card {
+  position: sticky;
+  top: calc(var(--header-h) + 20px + var(--i) * 26px);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px 40px;
+  min-height: min(68svh, 620px);
+  padding: clamp(24px, 4vw, 56px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: var(--color-glass);
+  box-shadow:
+    0 0 0 1px var(--color-line-soft) inset,
+    0 -18px 40px -30px rgb(13 18 22 / 0.35);
+}
+.stack-card:nth-child(2) {
+  background: var(--color-ink);
+  color: var(--color-fog);
+}
+.stack-card:nth-child(3) {
+  background: var(--color-cobalt);
+  color: #fff;
+}
+.stack-num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+}
+.stack-body {
+  align-self: end;
+  position: relative;
+  z-index: 1;
+}
+.stack-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1.5px solid currentColor;
+  padding-bottom: 2px;
+}
+.stack-glyph {
+  position: absolute;
+  right: -0.04em;
+  top: -0.12em;
+  font-family: var(--font-display);
+  font-size: clamp(120px, 24vw, 380px);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  opacity: 0.07;
+  white-space: nowrap;
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  .stack-card {
+    grid-template-columns: 1fr;
+    min-height: 58svh;
+  }
+}
+
+/* ── B2B: full-bleed cobalt, the type does the talking ───────────────────── */
+.b2b {
+  position: relative;
+  overflow: hidden;
+  margin-block: 48px;
+  background: var(--color-cobalt);
+  color: #fff;
+}
+.b2b-word {
+  padding: 8px var(--gutter) 28px;
+  font-family: var(--font-display);
+  font-size: clamp(64px, 15.5vw, 260px);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.045em;
+  line-height: 0.82;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(255 255 255 / 0.1);
+}
+.b2b-list {
+  display: grid;
+  border-top: 1px solid rgb(255 255 255 / 0.25);
+}
+.b2b-list li {
+  display: flex;
+  gap: 18px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgb(255 255 255 / 0.25);
+  font-size: 16px;
+}
+.b2b-list span {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+  padding-top: 3px;
+}

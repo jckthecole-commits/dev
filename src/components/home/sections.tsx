@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Icon, type IconName } from '@/components/icons'
+import { Icon } from '@/components/icons'
 import { ProductCard } from '@/components/shop/product-card'
 import { cardView, type ProductCard as Card } from '@/lib/catalog-query'
 import { formatDate } from '@/lib/format'
@@ -32,25 +32,22 @@ export function SectionHead({ eyebrow, title, intro, action, id }: { eyebrow?: s
   )
 }
 
-export function TrustStrip({ settings }: { settings: StoreSettings }) {
-  const items: { icon: IconName; title: string; text: string }[] = [
-    { icon: 'eye', title: 'Optometrist pe fiecare comandă', text: 'Rețeta e verificată înainte de montaj.' },
-    { icon: 'layers', title: 'Lentile de la producători certificați', text: 'Indice 1.50 – 1.74, tratamente premium.' },
-    { icon: 'refresh', title: `Garanție de adaptare ${settings.policies.adaptationDays} de zile`, text: 'Nu te obișnuiești? Refacem lentilele.' },
-    { icon: 'shield', title: 'Dispozitiv medical conform', text: 'Rame și lentile CE, MDR clasa I.' },
+/** Four facts, set like a spec sheet: big figures, small print — every one of them checkable on the site. */
+export function TrustStrip({ settings, indices }: { settings: StoreSettings; indices: [string, string] }) {
+  const facts: { fig: React.ReactNode; title: string; text: string }[] = [
+    { fig: '1:1', title: 'Desenate la scară', text: 'Fiecare ramă e trasă din cotele ei reale, în milimetri.' },
+    { fig: <>{settings.policies.adaptationDays}<small>zile</small></>, title: 'Garanție de adaptare', text: 'Nu te obișnuiești cu lentilele? Le refacem.' },
+    { fig: <>{indices[0]}<small>–{indices[1]}</small></>, title: 'Indici de lentile', text: 'Cu grosimea marginii calculată înainte să plătești.' },
+    { fig: 'Rx', title: 'Optometrist pe fiecare comandă', text: 'Rețeta e verificată înainte de montaj. CE, MDR clasa I.' },
   ]
   return (
-    <section aria-label="De ce Sifra Vision" className="border-y border-line bg-glass">
-      <ul className="container-x grid grid-cols-1 divide-line sm:grid-cols-2 lg:grid-cols-4 lg:divide-x">
-        {items.map((it) => (
-          <li key={it.title} className="flex items-start gap-4 py-6 lg:px-6 lg:first:pl-0 lg:last:pr-0">
-            <span className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-fog">
-              <Icon name={it.icon} />
-            </span>
-            <span>
-              <span className="block text-[15px] font-bold leading-snug">{it.title}</span>
-              <span className="mt-0.5 block text-[14px] text-graphite">{it.text}</span>
-            </span>
+    <section aria-label="De ce Sifra Vision" className="facts">
+      <ul className="container-x facts-grid">
+        {facts.map((f) => (
+          <li key={f.title}>
+            <span className="fact-fig">{f.fig}</span>
+            <span className="fact-title">{f.title}</span>
+            <span className="fact-text">{f.text}</span>
           </li>
         ))}
       </ul>
@@ -75,22 +72,28 @@ export function Collection({ products, title, eyebrow, href, label }: { products
 
 export function HowItWorks() {
   const steps = [
-    { n: '01', title: 'Alegi rama', text: 'Filtrezi după formă, lățime și material. Dimensiunile reale sunt pe fiecare produs — și le poți compara cu rama ta.', href: '/rame-de-vedere', cta: 'Vezi ramele' },
-    { n: '02', title: 'Alegi lentilele', text: 'Monofocale, progresive sau office, cu indicele recomandat pentru rețeta ta și grosimea estimată înainte să plătești.', href: '/lentile', cta: 'Despre lentile' },
-    { n: '03', title: 'Trimiți rețeta', text: 'O completezi, încarci o poză sau o trimiți mai târziu. Optometristul o verifică, apoi montăm și livrăm.', href: '/ghid/prescriptie', cta: 'Cum citești rețeta' },
+    { n: '01', title: 'Alegi rama', text: 'Filtrezi după formă, lățime și material. Dimensiunile reale sunt pe fiecare produs — și le poți compara cu rama ta.', href: '/rame-de-vedere', cta: 'Vezi ramele', glyph: '52□18' },
+    { n: '02', title: 'Alegi lentilele', text: 'Monofocale, progresive sau office, cu indicele recomandat pentru rețeta ta și grosimea estimată înainte să plătești.', href: '/lentile', cta: 'Despre lentile', glyph: '1.67' },
+    { n: '03', title: 'Trimiți rețeta', text: 'O completezi, încarci o poză sau o trimiți mai târziu. Optometristul o verifică, apoi montăm și livrăm.', href: '/ghid/prescriptie', cta: 'Cum citești rețeta', glyph: 'Rx' },
   ]
   return (
-    <section aria-labelledby="cum" className="cv-auto container-x py-24">
+    <section aria-labelledby="cum" className="container-x py-24">
       <SectionHead id="cum" eyebrow="Fără drum la optician" title="Cum comanzi ochelari *de vedere.*" />
-      <ol className="grid gap-4 md:grid-cols-3">
-        {steps.map((s) => (
-          <li key={s.n} className="focus-rise card flex flex-col p-7">
-            <span className="font-mono text-[13px] text-cobalt">{s.n}</span>
-            <h3 className="disp mt-10 text-[30px]">{s.title}</h3>
-            <p className="mt-3 flex-1 text-[15.5px] leading-relaxed text-ink-2">{s.text}</p>
-            <Link href={s.href} className="mt-6 inline-flex items-center gap-1.5 text-[14px] font-bold text-cobalt no-underline hover:underline">
-              {s.cta} <Icon name="arrow-right" size={16} />
-            </Link>
+      {/* three panels that stack over one another as the page scrolls */}
+      <ol className="stack">
+        {steps.map((s, i) => (
+          <li key={s.n} className="stack-card" style={{ ['--i' as string]: i }}>
+            <span className="stack-num">{s.n}</span>
+            <div className="stack-body">
+              <h3 className="disp text-[clamp(34px,4.4vw,64px)]">{s.title}</h3>
+              <p className="mt-4 max-w-md text-[17px] leading-relaxed">{s.text}</p>
+              <Link href={s.href} className="stack-cta">
+                {s.cta} <Icon name="arrow-right" size={18} />
+              </Link>
+            </div>
+            <span aria-hidden className="stack-glyph">
+              {s.glyph}
+            </span>
           </li>
         ))}
       </ol>
@@ -124,21 +127,14 @@ export function TryOnPromo({ frame }: { frame: Card }) {
           <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-fog/75">
             Camera telefonului găsește 478 de puncte pe față și folosește diametrul irisului ca riglă. Rama apare la dimensiunea ei reală, în milimetri — iar distanța pupilară o măsori pe loc, pentru comandă.
           </p>
-          <ul className="mt-8 grid max-w-xl gap-3 sm:grid-cols-2">
-            {[
-              ['lock', 'Imaginile nu părăsesc telefonul'],
-              ['ruler', 'Măsurare PD inclusă'],
-              ['flip', 'Compari două rame alăturat'],
-              ['camera', 'Fără aplicație de instalat'],
-            ].map(([icon, text]) => (
-              <li key={text} className="flex items-center gap-3 text-[15px]">
-                <span className="grid size-9 place-items-center rounded-xl bg-white/[.07]">
-                  <Icon name={icon as IconName} size={19} />
-                </span>
+          <ol className="b2b-list mt-8 max-w-xl">
+            {['Imaginile nu părăsesc telefonul', 'Măsurare PD inclusă', 'Compari două rame alăturat', 'Fără aplicație de instalat'].map((text, i) => (
+              <li key={text}>
+                <span>{String(i + 1).padStart(2, '0')}</span>
                 {text}
               </li>
             ))}
-          </ul>
+          </ol>
           <Link href="/proba-virtuala" className="btn btn-primary mt-10">
             <Icon name="camera" size={20} /> Pornește proba virtuală
           </Link>
@@ -259,44 +255,39 @@ function CityMap() {
 }
 
 export function B2BBand() {
-  const items: [IconName, string][] = [
-    ['tag', 'Prețuri en-gros pe niveluri'],
-    ['box', 'Stoc în timp real'],
-    ['list', 'Comandă rapidă pe cod de model'],
-    ['file', 'Declarații de conformitate'],
-  ]
+  const items = ['Prețuri en-gros pe niveluri', 'Stoc în timp real', 'Comandă rapidă pe cod de model', 'Declarații de conformitate']
   return (
-    <section aria-labelledby="b2b" className="cv-auto container-x py-12">
-      <div className="relative overflow-hidden rounded-[32px] bg-cobalt px-6 py-14 text-white sm:px-12 lg:py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-end">
-          <div>
-            <div className="eyebrow text-white/70">Pentru optici și magazine</div>
-            <h2 id="b2b" data-split className="disp mt-4 text-[clamp(34px,4.4vw,58px)]">
-              Distribuim ramele SIFRA
-              <br />
-              <em>în toată România.</em>
-            </h2>
-          </div>
-          <div>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {items.map(([icon, text]) => (
-                <li key={text} className="flex items-center gap-3 text-[15px]">
-                  <Icon name={icon} size={20} className="shrink-0 opacity-80" /> {text}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/b2b" className="btn bg-white text-cobalt hover:bg-fog">
-                Cere cont de partener
-              </Link>
-              <Link href="/b2b/portal" className="btn text-white ring-[1.5px] ring-white/60 ring-inset hover:bg-white/10">
-                Am deja cont
-              </Link>
-            </div>
+    <section aria-labelledby="b2b" className="b2b">
+      <div aria-hidden className="b2b-word">
+        Pentru optici
+      </div>
+      <div className="container-x grid gap-10 pb-16 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+        <div>
+          <div className="eyebrow text-white/70">Pentru optici și magazine</div>
+          <h2 id="b2b" data-split className="disp mt-4 text-[clamp(34px,4.4vw,58px)]">
+            Distribuim ramele SIFRA
+            <br />
+            <em>în toată România.</em>
+          </h2>
+        </div>
+        <div>
+          <ol className="b2b-list">
+            {items.map((text, i) => (
+              <li key={text}>
+                <span>{String(i + 1).padStart(2, '0')}</span>
+                {text}
+              </li>
+            ))}
+          </ol>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/b2b" className="btn bg-white text-cobalt hover:bg-fog">
+              Cere cont de partener
+            </Link>
+            <Link href="/b2b/portal" className="btn text-white ring-[1.5px] ring-white/60 ring-inset hover:bg-white/10">
+              Am deja cont
+            </Link>
           </div>
         </div>
-        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-[340px] rounded-full border border-white/20" />
-        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-[200px] rounded-full border border-white/15" />
       </div>
     </section>
   )

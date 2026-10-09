@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { AnatomySection, type AnatomyData } from '@/components/home/anatomy'
 import { CollectionRail, Manifesto, Marquee } from '@/components/home/motion-sections'
+import { FramePit, type PitFrame } from '@/components/home/frame-pit'
 import { HeroFocus, type HeroFrame } from '@/components/home/hero'
 import { B2BBand, Collection, FaqList, HowItWorks, JournalTeaser, SectionHead, Showroom, TrustStrip, TryOnPromo } from '@/components/home/sections'
 import { ShapeMorph, type MorphShape } from '@/components/home/shape-morph'
@@ -63,6 +64,10 @@ export default async function HomePage() {
       },
     ]
   })
+  const pitFrames: PitFrame[] = all.map((p, i) => {
+    const v = p.variants.find((x) => x.isDefault) ?? p.variants[0]!
+    return { slug: p.slug, name: p.name, price: formatPrice(p.price + v.priceDelta), src: v.art, box: p.artBox, pile: pileAt(i) }
+  })
   const featured = optical.filter((p) => p.featured).concat(optical.filter((p) => !p.featured)).slice(0, 8)
   const tryOnFrame = optical.find((p) => p.slug === 'iris-49') ?? optical[1]!
 
@@ -72,7 +77,7 @@ export default async function HomePage() {
       {/* the hero stays in the shell (it holds the LCP); every block below is its own Suspense
           boundary, so React hydrates them one by one and yields in between */}
       <HeroFocus frames={heroFrames} />
-      <TrustStrip settings={settings} />
+      <TrustStrip settings={settings} indices={indexRange(lenses.indices.filter((i) => i.active).map((i) => i.code))} />
       <Suspense>
         <ShapeMorph shapes={morphShapes} />
       </Suspense>
@@ -104,6 +109,9 @@ export default async function HomePage() {
       </section>
 
       <Suspense>
+        <FramePit frames={pitFrames} title="Toată colecția, *la grămadă.*" />
+      </Suspense>
+      <Suspense>
         <TryOnPromo frame={tryOnFrame} />
       </Suspense>
       <Suspense>
@@ -124,6 +132,23 @@ export default async function HomePage() {
       </Suspense>
     </>
   )
+}
+
+/** Lowest and highest active lens index, as written on the lens pages ("1.50", "1.74"). */
+function indexRange(codes: string[]): [string, string] {
+  const sorted = [...codes].sort((a, b) => parseFloat(a) - parseFloat(b))
+  return [sorted[0] ?? '1.50', sorted[sorted.length - 1] ?? '1.74']
+}
+
+/** A still-life heap for the frame pit before (or without) its physics: deterministic, so server and client agree. */
+function pileAt(i: number) {
+  let seed = (i + 1) * 2654435761
+  const rnd = () => ((seed = (seed ^ (seed >>> 15)) * 2246822519 + 0x9e3779b9) >>> 0) / 4294967296
+  const perRow = 7
+  const row = Math.floor(i / perRow)
+  const col = i % perRow
+  const x = 8 + ((col + 0.5) * 84) / perRow + (rnd() - 0.5) * 8 + (row % 2) * 5
+  return { x: Math.round(x * 10) / 10, y: Math.round((row * 8 + rnd() * 3) * 10) / 10, r: Math.round((rnd() - 0.5) * 44) }
 }
 
 /** Shapes without their own landing page still get one honest line. */
