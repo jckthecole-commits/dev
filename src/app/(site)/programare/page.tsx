@@ -19,7 +19,7 @@ async function getServices() {
   return db.select({ code: service.code, name: service.name, summary: service.summary, durationMin: service.durationMin, price: service.price }).from(service).where(eq(service.active, true)).orderBy(asc(service.position))
 }
 
-export default async function BookingPage({ searchParams }: PageProps<'/programare'>) {
+export default async function BookingPage({ searchParams }: Pick<PageProps<'/programare'>, 'searchParams'>) {
   const services = await getServices()
   return (
     <div className="container-x pb-16 pt-10">

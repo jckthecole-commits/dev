@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps<'/rame/[slug]'>): P
   }
 }
 
-export default async function ProductPage({ params }: PageProps<'/rame/[slug]'>) {
+export default async function ProductPage({ params }: Pick<PageProps<'/rame/[slug]'>, 'params'>) {
   const { slug } = await params
   const p = await getProductBySlug(slug)
   if (!p) notFound()

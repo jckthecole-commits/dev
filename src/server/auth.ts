@@ -22,6 +22,20 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     autoSignIn: true,
     sendResetPassword: async ({ user: u, url }) => {
+      // Accounts created by staff (partner approval, team invite) have no password yet → invitation copy.
+      const hasPassword = await db.query.account.findFirst({ where: (a, { and, eq }) => and(eq(a.userId, u.id), eq(a.providerId, 'credential')), columns: { id: true } })
+      if (!hasPassword) {
+        await sendMail({
+          to: u.email,
+          subject: 'Contul tău Sifra Vision este gata — alege o parolă',
+          html: emailLayout({
+            preheader: 'Setează parola ca să intri în cont.',
+            title: `Bun venit, ${u.name.split(' ')[0]}!`,
+            body: `<p>Ți-am creat un cont pe sifravision.ro pentru ${u.email}. Alege o parolă ca să intri — linkul e valabil o oră; după aceea folosește „Am uitat parola” cu aceeași adresă.</p>${emailButton(url, 'Setează parola')}`,
+          }),
+        })
+        return
+      }
       await sendMail({
         to: u.email,
         subject: 'Resetează parola contului Sifra Vision',

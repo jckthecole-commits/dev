@@ -7,7 +7,7 @@ import { subscriber } from '@/lib/db/schema'
 
 export const metadata: Metadata = { title: 'Confirmare abonare', robots: { index: false } }
 
-export default function ConfirmPage({ searchParams }: PageProps<'/newsletter/confirmare'>) {
+export default function ConfirmPage({ searchParams }: Pick<PageProps<'/newsletter/confirmare'>, 'searchParams'>) {
   return (
     <div className="container-x grid min-h-[50vh] place-items-center py-16 text-center">
       <Suspense fallback={<div className="skeleton h-40 w-96" />}>
@@ -17,7 +17,7 @@ export default function ConfirmPage({ searchParams }: PageProps<'/newsletter/con
   )
 }
 
-async function Confirm({ searchParams }: PageProps<'/newsletter/confirmare'>) {
+async function Confirm({ searchParams }: Pick<PageProps<'/newsletter/confirmare'>, 'searchParams'>) {
   const t = (await searchParams).t
   const token = typeof t === 'string' ? t : ''
   const row = token ? await db.query.subscriber.findFirst({ where: eq(subscriber.confirmToken, token) }) : null

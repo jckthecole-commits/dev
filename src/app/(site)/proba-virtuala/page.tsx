@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/proba-virtuala' },
 }
 
-export default async function TryOnPage({ searchParams }: PageProps<'/proba-virtuala'>) {
+export default async function TryOnPage({ searchParams }: Pick<PageProps<'/proba-virtuala'>, 'searchParams'>) {
   const all = await getCatalog('all')
   const frames: TryOnFrame[] = all.map((p) => ({
     slug: p.slug,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionForm } from '@/lib/use-action-form'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useSyncExternalStore, useTransition } from 'react'
 import { book, getAvailability } from '@/app/actions/booking'
 import { Icon } from '@/components/icons'
 import { cn } from '@/lib/cn'
@@ -14,21 +14,16 @@ const MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', '
 
 export function Booking({ services, initialService }: { services: Svc[]; initialService?: string }) {
   const [svc, setSvc] = useState(services.find((s) => s.code === initialService)?.code ?? services[0]?.code ?? '')
-  const [today, setToday] = useState<string | null>(null)
-  const [start, setStart] = useState<string | null>(null)
+  // "today" is only known in the browser (the page shell is prerendered)
+  const today = useSyncExternalStore(subscribeNothing, browserToday, serverToday)
+  const [startSel, setStart] = useState<string | null>(null)
+  const start = startSel ?? today
   const [avail, setAvail] = useState<Record<string, string[]>>({})
   const [day, setDay] = useState<string | null>(null)
   const [time, setTime] = useState<string | null>(null)
   const [loading, startLoad] = useTransition()
   const [state, onSubmit, pending] = useActionForm(book, null)
   const fe = state && !state.ok ? (state.fieldErrors ?? {}) : {}
-
-  // "today" is only known in the browser (the page shell is prerendered)
-  useEffect(() => {
-    const t = zonedDay(new Date())
-    setToday(t)
-    setStart(t)
-  }, [])
 
   useEffect(() => {
     if (!start) return
@@ -181,3 +176,7 @@ function F({ name, label, error, ...rest }: { name: string; label: string; error
     </div>
   )
 }
+
+const subscribeNothing = () => () => {}
+const browserToday = () => zonedDay(new Date())
+const serverToday = () => null

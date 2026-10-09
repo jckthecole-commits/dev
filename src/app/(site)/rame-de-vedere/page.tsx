@@ -8,6 +8,6 @@ export const metadata: Metadata = {
   alternates: { canonical: '/rame-de-vedere' },
 }
 
-export default function Page({ searchParams }: PageProps<'/rame-de-vedere'>) {
+export default function Page({ searchParams }: Pick<PageProps<'/rame-de-vedere'>, 'searchParams'>) {
   return <CatalogPage category="optical" searchParams={searchParams} landings={OPTICAL_LANDINGS} />
 }

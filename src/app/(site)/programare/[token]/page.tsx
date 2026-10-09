@@ -10,7 +10,7 @@ import { getSettings } from '@/server/settings'
 
 export const metadata: Metadata = { title: 'Programarea ta', robots: { index: false } }
 
-export default function ManageBooking({ params }: PageProps<'/programare/[token]'>) {
+export default function ManageBooking({ params }: Pick<PageProps<'/programare/[token]'>, 'params'>) {
   return (
     <div className="container-x grid min-h-[60vh] place-items-center py-16">
       <Suspense fallback={<div className="skeleton h-72 w-full max-w-lg" />}>
@@ -20,7 +20,7 @@ export default function ManageBooking({ params }: PageProps<'/programare/[token]
   )
 }
 
-async function View({ params }: PageProps<'/programare/[token]'>) {
+async function View({ params }: Pick<PageProps<'/programare/[token]'>, 'params'>) {
   const { token } = await params
   const a = await db.query.appointment.findFirst({ where: eq(appointment.manageToken, token), with: { service: true } })
   if (!a) notFound()

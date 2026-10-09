@@ -12,6 +12,6 @@ export function generateStaticParams() {
   return Object.keys(MAP).map((slug) => ({ slug }))
 }
 
-export default async function Guide({ params }: PageProps<'/ghid/[slug]'>) {
+export default async function Guide({ params }: Pick<PageProps<'/ghid/[slug]'>, 'params'>) {
   permanentRedirect(MAP[(await params).slug] ?? '/jurnal')
 }

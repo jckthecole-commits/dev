@@ -264,7 +264,7 @@ if (DEMO) {
       const p = v.product
       const fn = firstNames[rnd(firstNames.length)]!
       const ln = lastNames[rnd(lastNames.length)]!
-      const [city, county] = cities[rnd(cities.length)]!
+      const [city, county] = cities[rnd(cities.length)]! as [string, string]
       const created = new Date(Date.now() - rnd(60 * 24) * 3600 * 1000)
       const ageDays = (Date.now() - created.getTime()) / 86400000
       let status = statuses[rnd(statuses.length)]!
@@ -278,7 +278,7 @@ if (DEMO) {
       const sub = p.price + lensTotal
       const shippingMethod = city === 'Galați' && Math.random() < 0.5 ? 'pickup' : Math.random() < 0.4 ? 'easybox' : 'courier'
       const ship = sub >= 30000 || shippingMethod === 'pickup' ? 0 : shippingMethod === 'easybox' ? 1499 : 1999
-      const pm = (['card', 'card', 'cod', 'cod', 'transfer'] as const)[rnd(5)]
+      const pm = (['card', 'card', 'cod', 'cod', 'transfer'] as const)[rnd(5)]!
       const paid = status !== 'cancelled' && (pm === 'card' || ['delivered'].includes(status))
       const seq = await client`select nextval('order_number_seq')::int as n`
       const number = `SV-${created.getFullYear()}-${String(seq[0]!.n).padStart(6, '0')}`
@@ -300,9 +300,7 @@ if (DEMO) {
           .returning({ id: s.prescription.id })
         rxId = rx!.id
       }
-      const [o] = await db
-        .insert(s.order)
-        .values({
+      const ov: typeof s.order.$inferInsert = {
           number,
           accessToken: randomBytes(18).toString('base64url'),
           email: `${slugify(fn)}.${slugify(ln)}${i}@example.com`,
@@ -327,7 +325,8 @@ if (DEMO) {
           carrier: shippingMethod === 'pickup' ? null : 'Sameday',
           createdAt: created,
           updatedAt: created,
-        })
+        }
+      const [o] = await db.insert(s.order).values(ov)
         .returning({ id: s.order.id })
       await db.insert(s.orderItem).values({
         orderId: o!.id,
@@ -343,7 +342,13 @@ if (DEMO) {
         configuration: { lensType: type.code, lensIndex: index?.code, treatments: withLens ? ['hardcoat', 'ar'] : [], rxMode: withLens ? 'manual' : undefined, prescriptionId: rxId ?? undefined },
         priceBreakdown: [
           { code: 'frame', label: `Rama ${p.name} · ${v.colorName}`, amount: p.price },
-          ...(withLens ? [{ code: `type:${type.code}`, label: `Lentile ${type.name.toLowerCase()}`, amount: type.price }] : []),
+          ...(withLens
+            ? [
+                { code: `type:${type.code}`, label: `Lentile ${type.name.toLowerCase()}`, amount: type.price },
+                { code: `index:${index!.code}`, label: `Indice ${index!.code}`, amount: index!.price },
+                { code: 'treatments', label: 'Durificare + antireflex', amount: 9900 },
+              ]
+            : []),
         ],
         prescriptionId: rxId,
         frameSnapshot: { lensWidth: p.lensWidth, bridgeWidth: p.bridgeWidth, templeLength: p.templeLength, lensHeight: p.lensHeight, shape: p.shape },

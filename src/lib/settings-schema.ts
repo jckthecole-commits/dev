@@ -57,6 +57,8 @@ export type StoreSettings = {
   b2b: { minOrder: number; showStock: boolean; leadDays: string }
   booking: { slotStepMin: number; leadTimeHours: number; horizonDays: number }
   seo: { titleSuffix: string; defaultDescription: string }
+  /** Go-live items the owner ticks by hand (no machine-checkable signal). */
+  launch: { confirmed: string[] }
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -120,6 +122,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
     defaultDescription:
       'Rame de vedere și ochelari de soare cu lentile pe dioptria ta. Probă virtuală, preț complet calculat pe loc, rețetă verificată de optometrist. Showroom în Galați, livrare în toată România.',
   },
+  launch: { confirmed: [] },
 }
 
 export type SettingsSection = keyof StoreSettings
@@ -152,20 +155,21 @@ export const WEEKDAYS_RO = ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'V
 
 /** Go-live checklist derived from settings + environment. */
 export function goLiveChecklist(s: StoreSettings, env: Record<string, string | undefined>) {
-  const items: { key: string; label: string; done: boolean; hint: string; href: string }[] = [
+  const ok = (k: string) => s.launch.confirmed.includes(k)
+  const items: { key: string; label: string; done: boolean; hint: string; href: string; manual?: boolean }[] = [
     { key: 'cui', label: 'CUI și nr. Registrul Comerțului', done: !!s.company.cui && !!s.company.regCom, hint: 'Obligatoriu pe site (ANPC) și pe facturi.', href: '/admin/setari#company' },
     { key: 'phone', label: 'Telefon de contact', done: !!s.company.phone, hint: 'Afișat în header, footer și în e-mailuri.', href: '/admin/setari#company' },
     { key: 'medical', label: 'Mențiune dispozitive medicale (ANMDMR)', done: !!s.company.medicalNotice, hint: 'Ramele și lentilele corective sunt dispozitive medicale clasa I (MDR 2017/745).', href: '/admin/setari#company' },
     { key: 'optometrist', label: 'Optometrist responsabil', done: !!s.company.optometrist, hint: 'Apare pe pagina „Conformitate și siguranță”.', href: '/admin/setari#company' },
-    { key: 'hours', label: 'Program showroom confirmat', done: false, hint: 'Programul implicit este orientativ — confirmă-l (influențează programările).', href: '/admin/setari#hours' },
-    { key: 'vat', label: 'Regim TVA confirmat cu contabilul', done: false, hint: 'Lentilele corective pot intra sub scutirea pentru proteze (art. 294 Cod fiscal). Setează clasa TVA pe produse.', href: '/admin/setari#vat' },
+    { key: 'hours', label: 'Program showroom confirmat', done: ok('hours'), manual: true, hint: 'Programul implicit este orientativ — confirmă-l (influențează programările).', href: '/admin/setari#hours' },
+    { key: 'vat', label: 'Regim TVA confirmat cu contabilul', done: ok('vat'), manual: true, hint: 'Lentilele corective pot intra sub scutirea pentru proteze (art. 294 Cod fiscal). Setează clasa TVA pe produse.', href: '/admin/setari#vat' },
     { key: 'iban', label: 'IBAN pentru transfer bancar / B2B', done: !!s.company.iban, hint: 'Necesar dacă plata prin transfer este activă.', href: '/admin/setari#company' },
     { key: 'payments', label: 'Procesator de plăți card', done: !!(env.NETOPIA_API_KEY || env.STRIPE_SECRET_KEY), hint: 'Netopia (API v2) sau Stripe — cheile se pun în variabilele de mediu.', href: '/admin/integrari' },
     { key: 'smtp', label: 'Server e-mail (SMTP)', done: !!env.SMTP_HOST, hint: 'Fără SMTP, e-mailurile sunt salvate local în .data/outbox.', href: '/admin/integrari' },
     { key: 'invoice', label: 'Facturare & e-Factura (SmartBill)', done: !!(env.SMARTBILL_TOKEN && env.SMARTBILL_CIF), hint: 'Facturile se transmit în SPV în 5 zile lucrătoare.', href: '/admin/integrari' },
-    { key: 'sal', label: 'Pictograma ANPC SAL (250×50 px)', done: false, hint: 'Ord. ANPC 270/2026: link către reclamatiisal.anpc.ro. Înlocuiește insigna din footer cu pictograma oficială.', href: '/admin/integrari' },
-    { key: 'legal', label: 'Pagini legale revizuite de jurist', done: false, hint: 'Termeni, confidențialitate (inclusiv date medicale), retur.', href: '/admin/continut' },
-    { key: 'photos', label: 'Fotografii reale de produs', done: false, hint: 'Randările procedurale sunt fidele dimensional; adaugă și fotografii.', href: '/admin/produse' },
+    { key: 'sal', label: 'Pictograma ANPC SAL (250×50 px)', done: ok('sal'), manual: true, hint: 'Ord. ANPC 270/2026: link către reclamatiisal.anpc.ro. Înlocuiește insigna din footer cu pictograma oficială.', href: '/admin/integrari' },
+    { key: 'legal', label: 'Pagini legale revizuite de jurist', done: ok('legal'), manual: true, hint: 'Termeni, confidențialitate (inclusiv date medicale), retur.', href: '/admin/continut' },
+    { key: 'photos', label: 'Fotografii reale de produs', done: ok('photos'), manual: true, hint: 'Randările procedurale sunt fidele dimensional; adaugă și fotografii.', href: '/admin/produse' },
   ]
   return items
 }

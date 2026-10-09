@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FaceLandmarker as FL, NormalizedLandmark } from '@mediapipe/tasks-vision'
 import { FrameArt, type FrameArtProduct } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
@@ -119,9 +119,12 @@ export function TryOn({ frames, initialSlug, initialColor, startWithPd }: { fram
   const nudgeRef = useRef(0)
   const measuringRef = useRef(measuring)
   const specRef = useRef(frame.art as FrameSpec)
-  nudgeRef.current = nudge
-  measuringRef.current = measuring
-  specRef.current = frame.art as FrameSpec
+  // the render loop reads the latest props through refs
+  useLayoutEffect(() => {
+    nudgeRef.current = nudge
+    measuringRef.current = measuring
+    specRef.current = frame.art as FrameSpec
+  })
 
   /** Position the media layer (video/photo) to cover the stage, mirrored for the camera. */
   const layout = useCallback((mw: number, mh: number, mirror: boolean, focus?: { x: number; y: number; mmPerPx: number }) => {

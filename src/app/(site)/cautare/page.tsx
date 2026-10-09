@@ -8,7 +8,7 @@ import { getPublishedPosts } from '@/server/content'
 
 export const metadata: Metadata = { title: 'Căutare', robots: { index: false, follow: true } }
 
-export default function SearchPage({ searchParams }: PageProps<'/cautare'>) {
+export default function SearchPage({ searchParams }: Pick<PageProps<'/cautare'>, 'searchParams'>) {
   return (
     <div className="container-x pb-10 pt-12">
       <Suspense fallback={<div className="skeleton h-20 w-1/2" />}>
@@ -18,7 +18,7 @@ export default function SearchPage({ searchParams }: PageProps<'/cautare'>) {
   )
 }
 
-async function Results({ searchParams }: PageProps<'/cautare'>) {
+async function Results({ searchParams }: Pick<PageProps<'/cautare'>, 'searchParams'>) {
   const sp = await searchParams
   const q = typeof sp.q === 'string' ? sp.q.slice(0, 80) : ''
   const tokens = normalizeSearch(q).split(' ').filter(Boolean)

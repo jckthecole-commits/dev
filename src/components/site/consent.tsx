@@ -76,8 +76,6 @@ export function ConsentManager() {
     const c = read()
     if (c) {
       apply(c)
-      setAnalytics(c.analytics)
-      setMarketing(c.marketing)
     } else {
       const t = setTimeout(() => setOpen(true), 900)
       return () => clearTimeout(t)
@@ -86,6 +84,9 @@ export function ConsentManager() {
 
   useEffect(() => {
     const onOpen = () => {
+      const c = read()
+      setAnalytics(c?.analytics ?? false)
+      setMarketing(c?.marketing ?? false)
       setCustom(true)
       setOpen(true)
     }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { addToCart } from '@/app/actions/cart'
 import { FrameArt, type FrameArtProduct } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
@@ -76,7 +76,10 @@ export function Configurator({ frame, catalog, vat, initialColor, productionDays
   const type = catalog.types.find((t) => t.code === lensType)
   const needsRx = !!type?.requiresPrescription
   const [rxMode, setRxMode] = useState<RxMode>('manual')
-  const [rx, setRx] = useState<RxValues>({ od: { sph: 0, cyl: 0, axis: null, add: null }, os: { sph: 0, cyl: 0, axis: null, add: null }, pd: { mode: 'single', value: 63 } })
+  // PD measured in the virtual try-on is offered automatically until the customer picks one
+  const savedPd = useSyncExternalStore(subscribeNothing, readSavedPd, () => null)
+  const [rxDraft, setRx] = useState<Omit<RxValues, 'pd'> & { pd: RxValues['pd'] | null }>({ od: { sph: 0, cyl: 0, axis: null, add: null }, os: { sph: 0, cyl: 0, axis: null, add: null }, pd: null })
+  const rx: RxValues = useMemo(() => ({ ...rxDraft, pd: rxDraft.pd ?? { mode: 'single', value: savedPd ?? 63 } }), [rxDraft, savedPd])
   const [file, setFile] = useState<File | null>(null)
   const [touched, setTouched] = useState(false)
   const [indexCode, setIndexCode] = useState<string | undefined>(undefined)
@@ -86,15 +89,6 @@ export function Configurator({ frame, catalog, vat, initialColor, productionDays
   const [pending, start] = useTransition()
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // PD measured in the virtual try-on is offered automatically
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('sv:pd') ?? 'null') as { value: number; at: number } | null
-      if (saved && Date.now() - saved.at < 1000 * 60 * 60 * 24 * 30 && saved.value >= 50 && saved.value <= 80) setRx((r) => ({ ...r, pd: { mode: 'single', value: Math.round(saved.value * 2) / 2 } }))
-    } catch {
-      /* ignore */
-    }
-  }, [])
 
   const rxEntered = needsRx && rxMode === 'manual' && (rx.od.sph !== 0 || rx.os.sph !== 0 || rx.od.cyl !== 0 || rx.os.cyl !== 0)
   const recommended = recommendIndex(rxEntered ? rx : null, { rim: frame.rim, lensWidth: frame.lensWidth }, lensType) as string
@@ -516,4 +510,16 @@ function Step({ n, title, id, aside, children }: { n: number; title: string; id:
       {children}
     </section>
   )
+}
+
+const subscribeNothing = () => () => {}
+/** PD (mm) saved by the virtual try-on in the last 30 days, or null. Primitive → stable snapshot. */
+function readSavedPd(): number | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem('sv:pd') ?? 'null') as { value: number; at: number } | null
+    if (saved && Date.now() - saved.at < 1000 * 60 * 60 * 24 * 30 && saved.value >= 50 && saved.value <= 80) return Math.round(saved.value * 2) / 2
+  } catch {
+    /* ignore */
+  }
+  return null
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { and, desc, eq, gte } from 'drizzle-orm'
+import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { deleteAccount, signOutAction } from '@/app/actions/account'
@@ -31,7 +31,7 @@ async function Account() {
   const [orders, rx, appts, me, prt] = await Promise.all([
     db.select().from(order).where(eq(order.userId, u.id)).orderBy(desc(order.createdAt)).limit(20),
     db.select().from(prescription).where(eq(prescription.userId, u.id)).orderBy(desc(prescription.createdAt)).limit(10),
-    db.query.appointment.findMany({ where: and(eq(appointment.userId, u.id), gte(appointment.startsAt, new Date(Date.now() - 86400000 * 30))), with: { service: true }, orderBy: desc(appointment.startsAt), limit: 10 }),
+    db.query.appointment.findMany({ where: and(eq(appointment.userId, u.id), gte(appointment.startsAt, sql`now() - interval '30 days'`)), with: { service: true }, orderBy: desc(appointment.startsAt), limit: 10 }),
     db.query.user.findFirst({ where: eq(user.id, u.id) }),
     db.query.partner.findFirst({ where: eq(partner.userId, u.id) }),
   ])

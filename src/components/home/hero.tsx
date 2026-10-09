@@ -63,7 +63,7 @@ function KineticTitle({ className }: { className?: string }) {
 /** 3D frame: stacked silhouettes give real thickness; temples fold back in CSS 3D. */
 function Frame3D({ frame, widthPx }: { frame: HeroFrame; widthPx: number }) {
   const L = frameLayout(frame.art as FrameSpec)
-  const [vx, vy, vw, vh] = L.viewBox
+  const [, vy, vw, vh] = L.viewBox
   const k = widthPx / vw
   const heightPx = vh * k
   const hingeTop = (L.hingeY - vy) * k

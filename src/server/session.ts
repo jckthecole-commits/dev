@@ -9,7 +9,7 @@ export type SessionUser = { id: string; name: string; email: string; role: Role;
 
 /** Staff roles and what they may do. */
 export const STAFF_ROLES: Role[] = ['staff', 'optometrist', 'manager', 'admin']
-const CAN: Record<string, Role[]> = {
+export const CAN = {
   'orders:read': STAFF_ROLES,
   'orders:write': STAFF_ROLES,
   'rx:verify': ['optometrist', 'manager', 'admin'],
@@ -20,11 +20,11 @@ const CAN: Record<string, Role[]> = {
   'users:write': ['admin'],
   'appointments:write': STAFF_ROLES,
   'reports:read': ['manager', 'admin'],
-}
+} satisfies Record<string, Role[]>
 export type Permission = keyof typeof CAN
 
 export function can(role: Role | undefined | null, permission: Permission) {
-  return !!role && (CAN[permission] ?? []).includes(role)
+  return !!role && (CAN[permission] as Role[]).includes(role)
 }
 
 /** Current user (request-scoped, deduplicated per render). Reads request headers → call inside <Suspense>. */

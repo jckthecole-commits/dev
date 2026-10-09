@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'Contul meu — autentificare', robot
 
 const google = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 
-export default function LoginPage({ searchParams }: PageProps<'/cont/autentificare'>) {
+export default function LoginPage({ searchParams }: Pick<PageProps<'/cont/autentificare'>, 'searchParams'>) {
   return (
     <div className="container-x grid gap-12 py-14 lg:grid-cols-2 lg:items-center">
       <div>
@@ -23,7 +23,7 @@ export default function LoginPage({ searchParams }: PageProps<'/cont/autentifica
   )
 }
 
-async function WithNext({ searchParams }: PageProps<'/cont/autentificare'>) {
+async function WithNext({ searchParams }: Pick<PageProps<'/cont/autentificare'>, 'searchParams'>) {
   const sp = await searchParams
   const raw = typeof sp.next === 'string' ? sp.next : '/cont'
   const next = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/cont'

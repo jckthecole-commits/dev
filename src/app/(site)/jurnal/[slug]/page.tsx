@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps<'/jurnal/[slug]'>):
   }
 }
 
-export default async function ArticlePage({ params }: PageProps<'/jurnal/[slug]'>) {
+export default async function ArticlePage({ params }: Pick<PageProps<'/jurnal/[slug]'>, 'params'>) {
   const p = await getPost((await params).slug, 'article')
   if (!p) notFound()
   const toc = headingsOf(p.body)

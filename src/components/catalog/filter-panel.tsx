@@ -66,10 +66,6 @@ function Check({ checked, onChange, label, n, disabled, children }: { checked: b
 function RangeInputs({ label, unit, min, max, onApply }: { label: string; unit: string; min: number | null; max: number | null; onApply: (min: number | null, max: number | null) => void }) {
   const [a, setA] = useState(min?.toString() ?? '')
   const [b, setB] = useState(max?.toString() ?? '')
-  useEffect(() => {
-    setA(min?.toString() ?? '')
-    setB(max?.toString() ?? '')
-  }, [min, max])
   const apply = () => {
     const na = a.trim() === '' ? null : Number(a)
     const nb = b.trim() === '' ? null : Number(b)
@@ -194,21 +190,21 @@ function Panel({ filters, facets, category }: { filters: CatalogFilters; facets:
         </Group>
       ) : null}
       <Group title="Preț ramă" defaultOpen={false}>
-        <RangeInputs label="Preț" unit="lei" min={filters.priceMin} max={filters.priceMax} onApply={(a, b) => set({ priceMin: a, priceMax: b })} />
+        <RangeInputs key={`${filters.priceMin}-${filters.priceMax}`} label="Preț" unit="lei" min={filters.priceMin} max={filters.priceMax} onApply={(a, b) => set({ priceMin: a, priceMax: b })} />
       </Group>
       <Group title="Dimensiuni exacte (mm)" defaultOpen={filters.lensMin !== null || filters.bridgeMin !== null || filters.templeMin !== null}>
         <div className="flex flex-col gap-3">
           <div>
             <div className="spec mb-1.5">Lățime lentilă (A)</div>
-            <RangeInputs label="Lățime lentilă" unit="mm" min={filters.lensMin} max={filters.lensMax} onApply={(a, b) => set({ lensMin: a, lensMax: b })} />
+            <RangeInputs key={`${filters.lensMin}-${filters.lensMax}`} label="Lățime lentilă" unit="mm" min={filters.lensMin} max={filters.lensMax} onApply={(a, b) => set({ lensMin: a, lensMax: b })} />
           </div>
           <div>
             <div className="spec mb-1.5">Punte (DBL)</div>
-            <RangeInputs label="Punte" unit="mm" min={filters.bridgeMin} max={filters.bridgeMax} onApply={(a, b) => set({ bridgeMin: a, bridgeMax: b })} />
+            <RangeInputs key={`${filters.bridgeMin}-${filters.bridgeMax}`} label="Punte" unit="mm" min={filters.bridgeMin} max={filters.bridgeMax} onApply={(a, b) => set({ bridgeMin: a, bridgeMax: b })} />
           </div>
           <div>
             <div className="spec mb-1.5">Braț</div>
-            <RangeInputs label="Braț" unit="mm" min={filters.templeMin} max={filters.templeMax} onApply={(a, b) => set({ templeMin: a, templeMax: b })} />
+            <RangeInputs key={`${filters.templeMin}-${filters.templeMax}`} label="Braț" unit="mm" min={filters.templeMin} max={filters.templeMax} onApply={(a, b) => set({ templeMin: a, templeMax: b })} />
           </div>
         </div>
       </Group>

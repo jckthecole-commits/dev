@@ -396,6 +396,23 @@
 }
 
 /* ── Eye chart rows (optotip) ───────────────────────────────────────────── */
+/* Admin filter tabs — pill links, active via aria-current */
+@utility tab-pill {
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13.5px;
+  text-decoration: none;
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  &[aria-current='page'] {
+    background: var(--color-ink);
+    color: var(--color-fog);
+    box-shadow: none;
+  }
+  &:hover:not([aria-current='page']) {
+    background: var(--color-paper);
+  }
+}
+
 @utility chart-row {
   display: block;
   text-align: center;

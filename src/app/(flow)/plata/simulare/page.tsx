@@ -29,7 +29,7 @@ async function decide(formData: FormData) {
   redirect(`/comanda/${o.number}?t=${o.accessToken}&anulat=1`)
 }
 
-export default function SimulatedPayment({ searchParams }: PageProps<'/plata/simulare'>) {
+export default function SimulatedPayment({ searchParams }: Pick<PageProps<'/plata/simulare'>, 'searchParams'>) {
   return (
     <div className="container-x grid min-h-[70vh] place-items-center py-16">
       <Suspense fallback={<div className="skeleton h-80 w-full max-w-md" />}>
@@ -39,7 +39,7 @@ export default function SimulatedPayment({ searchParams }: PageProps<'/plata/sim
   )
 }
 
-async function Panel({ searchParams }: PageProps<'/plata/simulare'>) {
+async function Panel({ searchParams }: Pick<PageProps<'/plata/simulare'>, 'searchParams'>) {
   await connection()
   if (!allowed()) notFound()
   const sp = await searchParams

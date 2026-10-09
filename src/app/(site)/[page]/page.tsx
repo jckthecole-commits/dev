@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<'/[page]'>): Promis
   return { title: p.metaTitle ?? p.title, description: p.metaDescription ?? p.excerpt ?? undefined, alternates: { canonical: `/${p.slug}` } }
 }
 
-export default async function CmsPage({ params }: PageProps<'/[page]'>) {
+export default async function CmsPage({ params }: Pick<PageProps<'/[page]'>, 'params'>) {
   const p = await getPost((await params).page, 'page')
   if (!p) notFound()
   return (
