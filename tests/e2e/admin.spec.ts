@@ -50,12 +50,12 @@ test.describe('admin', () => {
     expect((await request.get(pub!)).headers()['content-type']).toBe('application/pdf')
     await open(page, '/conformitate')
     await expect(page.getByRole('link', { name: new RegExp(`Declarație test ${stamp}`) })).toBeVisible()
-    const res = await page.context().browser()!.newContext().then(async (c) => { const r = await c.request.get(new URL(b2b!, page.url()).toString()); await c.close(); return r.status() })
+    const res = await page.context().browser()!.newContext({ storageState: { cookies: [], origins: [] } }).then(async (c) => { const r = await c.request.get(new URL(b2b!, page.url()).toString()); await c.close(); return r.status() })
     expect(res).toBe(401)
   })
 
   test('customers cannot open the admin', async ({ browser, baseURL }) => {
-    const ctx = await browser.newContext({ baseURL })
+    const ctx = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] } })
     const p = await ctx.newPage()
     await p.goto('/admin')
     await expect(p).toHaveURL(/\/cont\/autentificare/)
