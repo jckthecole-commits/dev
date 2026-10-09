@@ -32,3 +32,4 @@ public/vendor/mediapipe/wasm/
 .playwright/
 
 __pycache__/
+.media-cache/

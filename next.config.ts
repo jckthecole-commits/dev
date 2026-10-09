@@ -69,6 +69,11 @@ const nextConfig: NextConfig = {
         source: '/(cont|admin|b2b/portal|api/private)/:path*',
         headers: [{ key: 'Cache-Control', value: 'private, no-store' }],
       },
+      {
+        // campaign media live in content-hashed folders (scripts/media/build.mjs)
+        source: '/media/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
     ]
   },
   async redirects() {

@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { AnatomySection, type AnatomyData } from '@/components/home/anatomy'
 import { CollectionRail, Manifesto, Marquee } from '@/components/home/motion-sections'
+import { FilmScrub } from '@/components/home/film'
 import { FramePit, type PitFrame } from '@/components/home/frame-pit'
+import { Locuri, type Locul } from '@/components/home/locuri'
 import { HeroFocus, type HeroFrame } from '@/components/home/hero'
 import { B2BBand, Collection, FaqList, HowItWorks, JournalTeaser, SectionHead, Showroom, TrustStrip, TryOnPromo } from '@/components/home/sections'
 import { ShapeMorph, type MorphShape } from '@/components/home/shape-morph'
@@ -10,6 +12,7 @@ import { ThicknessLab } from '@/components/home/thickness-lab'
 import { SHAPES } from '@/lib/catalog-filters'
 import { OPTICAL_LANDINGS } from '@/lib/catalog-landings'
 import { artOf } from '@/lib/product-art'
+import { mediaImage, mediaVideo } from '@/lib/media'
 import { JsonLd } from '@/components/seo/json-ld'
 import { formatFrameSize, formatPrice } from '@/lib/format'
 import { estimateThickness, formatDiopter } from '@/lib/optics'
@@ -30,6 +33,9 @@ export default async function HomePage() {
   const sun = all.filter((p) => p.category === 'sun')
   // hero showcase: four characters of the collection, each with its real colours
   const MATERIAL_RO: Record<string, string> = { acetat: 'acetat', metal: 'metal', titan: 'titan', tr90: 'TR90', combinat: 'acetat + metal' }
+  const heroWide = mediaImage('galati-ceata')
+  const heroTall = mediaImage('galati-ceata-v')
+  const heroPhoto = heroWide && heroTall ? { wide: heroWide, tall: heroTall } : null
   const heroFrames: HeroFrame[] = ['mira-52', 'ada-53', 'iris-49', 'faleza-57']
     .map((slug) => all.find((p) => p.slug === slug))
     .filter((p): p is (typeof all)[number] => !!p)
@@ -71,12 +77,37 @@ export default async function HomePage() {
   const featured = optical.filter((p) => p.featured).concat(optical.filter((p) => !p.featured)).slice(0, 8)
   const tryOnFrame = optical.find((p) => p.slug === 'iris-49') ?? optical[1]!
 
+  // „Prin lentilă” and „Locurile”: generated campaign media; without them the drawn versions stay
+  const film = mediaVideo('film-prin-lentila')
+  const PLACES: [string, string, string][] = [
+    ['faleza-57', 'Faleza', 'faleza'],
+    ['brates-52', 'Brateș', 'brates'],
+    ['dunarea-58', 'Dunărea', 'dunarea'],
+    ['siret-54', 'Siret', 'siret'],
+    ['garboavele-50', 'Gârboavele', 'garboavele'],
+    ['prut-52', 'Prut', 'prut'],
+    ['tiglina-52', 'Țiglina', 'tiglina'],
+    ['port-59', 'Port', 'port'],
+  ]
+  const locuri: Locul[] = PLACES.flatMap(([slug, place, id]) => {
+    const p = sun.find((x) => x.slug === slug)
+    const img = mediaImage(`loc-${id}`)
+    if (!p || !img) return []
+    const v = p.variants.find((x) => x.isDefault) ?? p.variants[0]!
+    return [{ place, img, pol: mediaImage(`loc-${id}-pol`), product: { slug: p.slug, name: p.name, price: formatPrice(p.price), tagline: p.tagline, polarized: p.polarized, art: v.art, box: p.artBox } }]
+  })
+
   return (
     <>
       <JsonLd data={[opticianLd(settings), faqLd(faqs.slice(0, 8))]} />
       {/* the hero stays in the shell (it holds the LCP); every block below is its own Suspense
           boundary, so React hydrates them one by one and yields in between */}
-      <HeroFocus frames={heroFrames} />
+      <HeroFocus frames={heroFrames} photo={heroPhoto} />
+      {film ? (
+        <Suspense>
+          <FilmScrub video={film} address={`${settings.company.address}, ${settings.company.city}`} />
+        </Suspense>
+      ) : null}
       <TrustStrip settings={settings} indices={indexRange(lenses.indices.filter((i) => i.active).map((i) => i.code))} />
       <Suspense>
         <ShapeMorph shapes={morphShapes} />
@@ -118,7 +149,11 @@ export default async function HomePage() {
         <HowItWorks />
       </Suspense>
       <Suspense>
-        <Collection products={sun.slice(0, 4)} eyebrow="Ochelari de soare" title="Numiți după locurile *unde îi porți.*" href="/ochelari-de-soare" label="Toți ochelarii de soare" />
+        {locuri.length >= 3 ? (
+          <Locuri places={locuri} title="Numiți după locurile *unde îi porți.*" />
+        ) : (
+          <Collection products={sun.slice(0, 4)} eyebrow="Ochelari de soare" title="Numiți după locurile *unde îi porți.*" href="/ochelari-de-soare" label="Toți ochelarii de soare" />
+        )}
       </Suspense>
       <Suspense>
         <Showroom settings={settings} />
