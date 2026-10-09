@@ -21,7 +21,7 @@ const csp = [
   `frame-src 'self' https://www.openstreetmap.org https://www.google.com`,
   `frame-ancestors 'none'`,
   `base-uri 'self'`,
-  `form-action 'self' https://secure.mobilpay.ro https://secure.sandbox.netopia-payments.com https://checkout.stripe.com`,
+  `form-action 'self' https://secure.netopia-payments.com https://secure-sandbox.netopia-payments.com https://checkout.stripe.com`,
   `object-src 'none'`,
   ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ')
@@ -51,6 +51,7 @@ const nextConfig: NextConfig = {
     localPatterns: [{ pathname: '/media/**' }, { pathname: '/images/**' }],
   },
   experimental: {
+    authInterrupts: true,
     instantInsights: { validationLevel: 'manual-warning' },
   },
   async headers() {

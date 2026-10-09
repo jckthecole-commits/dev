@@ -280,7 +280,8 @@ if (DEMO) {
       const ship = sub >= 30000 || shippingMethod === 'pickup' ? 0 : shippingMethod === 'easybox' ? 1499 : 1999
       const pm = (['card', 'card', 'cod', 'cod', 'transfer'] as const)[rnd(5)]
       const paid = status !== 'cancelled' && (pm === 'card' || ['delivered'].includes(status))
-      const number = `SV-${created.getFullYear()}-${String(1000 + i).padStart(6, '0')}`
+      const seq = await client`select nextval('order_number_seq')::int as n`
+      const number = `SV-${created.getFullYear()}-${String(seq[0]!.n).padStart(6, '0')}`
       let rxId: string | null = null
       if (withLens) {
         const sph = -(rnd(16) * 0.25)

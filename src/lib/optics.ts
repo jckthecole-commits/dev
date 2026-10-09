@@ -10,7 +10,7 @@ export type EyeRx = {
   add: number | null
 }
 
-export type PdValue = { mode: 'single'; value: number } | { mode: 'dual'; right: number; left: number }
+export type PdValue = { mode: 'single'; value: number } | { mode: 'dual'; right: number; left: number } | { mode: 'unknown' }
 
 export type RxValues = {
   od: EyeRx // right eye (oculus dexter)
@@ -83,8 +83,8 @@ export function sphericalEquivalent(eye: Pick<EyeRx, 'sph' | 'cyl'>): number {
   return round2(eye.sph + eye.cyl / 2)
 }
 
-export function totalPd(pd: PdValue): number {
-  return pd.mode === 'single' ? pd.value : pd.right + pd.left
+export function totalPd(pd: PdValue): number | null {
+  return pd.mode === 'single' ? pd.value : pd.mode === 'dual' ? pd.right + pd.left : null
 }
 
 export function validateRx(rx: RxValues, opts: { requiresAdd?: boolean } = {}): RxIssue[] {
@@ -116,7 +116,9 @@ export function validateRx(rx: RxValues, opts: { requiresAdd?: boolean } = {}): 
     }
   }
 
-  if (rx.pd.mode === 'single') {
+  if (rx.pd.mode === 'unknown') {
+    issues.push({ field: 'pd', level: 'warning', message: 'Fără PD: te sunăm să-l măsurăm împreună sau îl măsori cu camera în proba virtuală.' })
+  } else if (rx.pd.mode === 'single') {
     if (!Number.isFinite(rx.pd.value) || rx.pd.value < RX_LIMITS.pdSingle.min || rx.pd.value > RX_LIMITS.pdSingle.max) {
       issues.push({ field: 'pd', level: 'error', message: 'Distanța pupilară (PD) trebuie să fie între 50 și 80 mm.' })
     }

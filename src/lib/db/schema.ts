@@ -16,6 +16,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  pgSequence,
   primaryKey,
   real,
   smallint,
@@ -492,6 +493,9 @@ export type PostalAddress = {
 
 export type PriceLine = { code: string; label: string; amount: number }
 
+/** Human-friendly order numbers: SV-2026-001001 */
+export const orderNumberSeq = pgSequence('order_number_seq', { startWith: 1001, increment: 1 })
+
 export const order = pgTable(
   'order',
   {
@@ -564,6 +568,8 @@ export const orderItem = pgTable(
     configuration: jsonb().$type<LineConfiguration>(),
     priceBreakdown: jsonb().$type<PriceLine[]>().notNull().default([]),
     prescriptionId: uuid().references(() => prescription.id, { onDelete: 'set null' }),
+    /** Where the stock for this line is reserved (released on cancel, consumed on dispatch). */
+    stockLocationId: uuid().references(() => location.id, { onDelete: 'set null' }),
     /** Snapshot of frame data for the lab work order. */
     frameSnapshot: jsonb().$type<{ lensWidth: number; bridgeWidth: number; templeLength: number; lensHeight: number; shape: string }>(),
   },
