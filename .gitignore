@@ -1,0 +1,28 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# next
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+!.env.example
+
+# runtime data (uploads, local mail outbox, test artifacts)
+.data/
+storage/
+test-results/
+playwright-report/
+coverage/
+
+# os / editors
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea/
