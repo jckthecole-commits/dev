@@ -112,7 +112,14 @@ export async function storePrivateFile(file: File, folder: string) {
 export async function readPrivateFile(key: string): Promise<Buffer | null> {
   if (!key.startsWith('private/')) return null
   const blob = await getObject(key)
-  return blob ? decryptBuffer(blob) : null
+  if (!blob) return null
+  try {
+    return decryptBuffer(blob)
+  } catch (e) {
+    // encrypted under another DATA_ENCRYPTION_KEY: treated as missing, not as a crash
+    console.error('[storage] private file could not be decrypted', key, (e as Error).message)
+    return null
+  }
 }
 
 const DOC_TYPES: Record<string, { mime: string; magic?: (b: Buffer) => boolean }> = {

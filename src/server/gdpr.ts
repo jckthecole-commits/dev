@@ -2,7 +2,7 @@ import 'server-only'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { address, appointment, order, prescription, session, subscriber, user } from '@/lib/db/schema'
-import { decryptJson } from '@/lib/crypto'
+import { tryDecryptJson } from '@/lib/crypto'
 import { deleteObject } from './storage'
 
 /** GDPR art. 15/20 — everything we hold about a customer, machine-readable. */
@@ -21,7 +21,7 @@ export async function exportCustomerData(userId: string) {
     user: u,
     addresses: addrs,
     orders: orders.map(({ accessToken: _t, internalNote: _n, ...o }) => o),
-    prescriptions: rx.map((r) => ({ id: r.id, source: r.source, status: r.status, createdAt: r.createdAt, values: r.dataEnc ? decryptJson(r.dataEnc) : null, hasFile: !!r.fileKey })),
+    prescriptions: rx.map((r) => ({ id: r.id, source: r.source, status: r.status, createdAt: r.createdAt, values: r.dataEnc ? tryDecryptJson(r.dataEnc) : null, hasFile: !!r.fileKey })),
     appointments: appts.map(({ manageToken: _m, staffNote: _s, ...a }) => a),
     newsletter,
   }

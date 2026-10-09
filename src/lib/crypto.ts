@@ -47,6 +47,24 @@ export function decryptJson<T>(text: string): T {
   return JSON.parse(decryptBuffer(Buffer.from(text.slice(3), 'base64url')).toString('utf8')) as T
 }
 
+/**
+ * Like decryptJson, but a record that cannot be read — encrypted under another
+ * DATA_ENCRYPTION_KEY, or damaged — comes back as null instead of failing the whole
+ * page it is listed on. The cause is logged once per process.
+ */
+let warned = false
+export function tryDecryptJson<T>(text: string): T | null {
+  try {
+    return decryptJson<T>(text)
+  } catch (e) {
+    if (!warned) {
+      warned = true
+      console.error('[crypto] a record could not be decrypted — was DATA_ENCRYPTION_KEY changed after it was saved?', (e as Error).message)
+    }
+    return null
+  }
+}
+
 /** URL-safe random token (default 24 bytes → 32 chars). */
 export function randomToken(bytes = 24): string {
   return randomBytes(bytes).toString('base64url')

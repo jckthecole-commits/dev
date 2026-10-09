@@ -9,6 +9,9 @@ import { getSettings } from './settings'
 
 export const CART_COOKIE = 'sv_cart'
 const CART_MAX_AGE = 60 * 60 * 24 * 30
+// Secure only when the site is served over HTTPS: a browser drops Secure cookies set over
+// plain HTTP (a LAN address, a local install), and every page would start a new, empty cart
+const SECURE_COOKIE = (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://')
 
 export async function getCartId(): Promise<string | null> {
   const id = (await cookies()).get(CART_COOKIE)?.value
@@ -23,7 +26,7 @@ export async function ensureCartId(userId?: string | null): Promise<string> {
     if (row) return row.id
   }
   const [row] = await db.insert(cart).values({ userId: userId ?? null }).returning({ id: cart.id })
-  ;(await cookies()).set(CART_COOKIE, row!.id, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: CART_MAX_AGE })
+  ;(await cookies()).set(CART_COOKIE, row!.id, { httpOnly: true, sameSite: 'lax', secure: SECURE_COOKIE, path: '/', maxAge: CART_MAX_AGE })
   return row!.id
 }
 

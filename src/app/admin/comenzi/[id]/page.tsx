@@ -9,7 +9,7 @@ import { Badge, Field, input, PageHeader, Panel } from '@/components/admin/ui'
 import { Icon } from '@/components/icons'
 import { db } from '@/lib/db'
 import { order } from '@/lib/db/schema'
-import { decryptJson } from '@/lib/crypto'
+import { tryDecryptJson } from '@/lib/crypto'
 import { formatDateTime, formatPrice } from '@/lib/format'
 import { formatDiopter, type RxValues } from '@/lib/optics'
 import { PAYMENT_LABEL, PAYMENT_STATUS_LABEL, SHIPPING_LABEL, STATUS, TRANSITIONS } from '@/lib/order-status'
@@ -94,7 +94,8 @@ async function Detail({ params }: Pick<PageProps<'/admin/comenzi/[id]'>, 'params
           <Panel title={`Produse · ${o.items.length}`} pad={false}>
             <ul className="divide-y divide-line-soft">
               {o.items.map((it) => {
-                const rx = it.prescription?.dataEnc ? decryptJson<RxValues>(it.prescription.dataEnc) : null
+                const rx = it.prescription?.dataEnc ? tryDecryptJson<RxValues>(it.prescription.dataEnc) : null
+                const unreadable = !!it.prescription?.dataEnc && !rx
                 return (
                   <li key={it.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
@@ -124,6 +125,7 @@ async function Detail({ params }: Pick<PageProps<'/admin/comenzi/[id]'>, 'params
                             </tbody>
                           </table>
                         ) : null}
+                        {unreadable ? <p className="mt-3 rounded-xl bg-warn-50 px-3 py-2 text-[13.5px] text-warn">Valorile nu pot fi citite: rețeta a fost criptată cu o altă cheie decât <code>DATA_ENCRYPTION_KEY</code> de acum. Repune cheia cu care a fost salvată sau cere rețeta din nou.</p> : null}
                         {rx ? <p className="mt-2 text-[13px]">PD: <strong>{pdText(rx.pd)}</strong>{rx.notes ? ` · ${rx.notes}` : ''}</p> : null}
                         {it.prescription?.fileKey ? <a href={`/api/private/rx/${it.prescription.id}`} target="_blank" className="mt-2 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-cobalt"><Icon name="file" size={16} /> Deschide fișierul rețetei</a> : null}
                         {it.prescription && canRx ? (

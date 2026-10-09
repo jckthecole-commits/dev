@@ -7,7 +7,7 @@ import { ProfileForm } from '@/components/account/profile-form'
 import { Icon } from '@/components/icons'
 import { db } from '@/lib/db'
 import { appointment, order, partner, prescription, user } from '@/lib/db/schema'
-import { decryptJson } from '@/lib/crypto'
+import { tryDecryptJson } from '@/lib/crypto'
 import { formatDate, formatDateTime, formatPrice, formatTime } from '@/lib/format'
 import { formatDiopter, type RxValues } from '@/lib/optics'
 import { STATUS } from '@/lib/order-status'
@@ -97,7 +97,7 @@ async function Account() {
           {rx.length ? (
             <ul className="mt-4 flex flex-col gap-3">
               {rx.map((r) => {
-                const v = r.dataEnc ? decryptJson<RxValues>(r.dataEnc) : null
+                const v = r.dataEnc ? tryDecryptJson<RxValues>(r.dataEnc) : null
                 return (
                   <li key={r.id} className="rounded-xl bg-paper p-4 ring-1 ring-line-soft">
                     <div className="flex items-center justify-between">
@@ -116,7 +116,7 @@ async function Account() {
                         <span>{v.os.axis ?? '—'}°</span>
                       </div>
                     ) : (
-                      <p className="mt-2 text-[13.5px] text-graphite">Poză / PDF încărcat</p>
+                      <p className="mt-2 text-[13.5px] text-graphite">{r.dataEnc ? 'Valorile nu pot fi afișate acum — scrie-ne și le verificăm.' : 'Poză / PDF încărcat'}</p>
                     )}
                   </li>
                 )

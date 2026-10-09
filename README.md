@@ -136,6 +136,8 @@ Comenzi utile: `docker compose logs -f app`, `docker compose restart app`, `dock
 
 **Fără Docker:** PostgreSQL 15+ din `apt`, un utilizator și o bază `sifra`, apoi `pnpm install`, `sh scripts/setup-env.sh`, `pnpm db:migrate`, `pnpm db:seed:demo`, `pnpm build`, `pnpm start`. Pentru pornire automată, un serviciu systemd care rulează `pnpm start` în folderul proiectului.
 
+**Rețetele apar „nu pot fi citite”:** sunt criptate cu `DATA_ENCRYPTION_KEY`, iar cheia din `.env` nu mai e cea cu care au fost salvate (de exemplu `.env` regenerat cu `setup-env.sh`). Repune cheia veche; pe o instalare demo poți porni de la zero cu `docker compose down -v` și apoi `SEED_FLAGS=--demo sh scripts/docker-up.sh` (șterge toate datele). Păstrează cheia în siguranță: fără ea, rețetele salvate nu mai pot fi recuperate.
+
 **`ECONNRESET` / `ECONNREFUSED` la `db:migrate` sau la build:** baza de date nu răspunde la adresa din `DATABASE_URL`. Cu Docker, `git pull` și `sh scripts/docker-up.sh`: versiunile mai vechi treceau prin proxy-ul de porturi al Docker, pe care unele VPN-uri și firewall-uri îl blochează. Altfel, verifică `docker compose ps` (containerul `db` trebuie să fie *healthy*) și că portul nu e ocupat de alt serviciu (`sudo ss -ltnp | grep 5432`).
 
 ### Vercel / alte platforme

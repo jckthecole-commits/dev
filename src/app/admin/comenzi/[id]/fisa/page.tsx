@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { PrintButton } from '@/components/admin/print-button'
 import { db } from '@/lib/db'
 import { order } from '@/lib/db/schema'
-import { decryptJson } from '@/lib/crypto'
+import { tryDecryptJson } from '@/lib/crypto'
 import { formatDateTime } from '@/lib/format'
 import { formatDiopter, type RxValues } from '@/lib/optics'
 import { audit } from '@/server/audit'
@@ -32,7 +32,8 @@ async function Sheet({ params }: Pick<PageProps<'/admin/comenzi/[id]/fisa'>, 'pa
     <div className="mx-auto max-w-[800px] bg-white p-8 text-ink print:p-0">
       <div className="no-print mb-6 flex justify-end"><PrintButton /></div>
       {(pairs.length ? pairs : o.items).map((it, idx) => {
-        const rx = it.prescription?.dataEnc ? decryptJson<RxValues>(it.prescription.dataEnc) : null
+        // unreadable (another DATA_ENCRYPTION_KEY): the sheet prints blank cells rather than failing
+        const rx = it.prescription?.dataEnc ? tryDecryptJson<RxValues>(it.prescription.dataEnc) : null
         const f = it.frameSnapshot
         return (
           <section key={it.id} className="mb-10 break-after-page border border-ink p-6">

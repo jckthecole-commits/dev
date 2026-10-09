@@ -5,7 +5,7 @@ import { reviewPrescription } from '@/app/admin/_actions/orders'
 import { AdminForm } from '@/components/admin/form'
 import { Badge, Empty, Field, input, PageHeader, Panel } from '@/components/admin/ui'
 import { Icon } from '@/components/icons'
-import { decryptJson } from '@/lib/crypto'
+import { tryDecryptJson } from '@/lib/crypto'
 import { db } from '@/lib/db'
 import { order, orderItem, prescription, user } from '@/lib/db/schema'
 import { formatDateTime } from '@/lib/format'
@@ -73,7 +73,8 @@ async function Queue({ searchParams }: Pick<PageProps<'/admin/retete'>, 'searchP
       ) : (
         <div className="grid gap-5 2xl:grid-cols-2">
           {rows.map(({ rx: p, orderId, number, customer, lensType, product, account }) => {
-            const values = p.dataEnc ? decryptJson<RxValues>(p.dataEnc) : null
+            const values = p.dataEnc ? tryDecryptJson<RxValues>(p.dataEnc) : null
+            const unreadable = !!p.dataEnc && !values
             const issues = values ? validateRx(values, { requiresAdd: lensType === 'progressive' }) : []
             return (
               <Panel key={p.id + (orderId ?? '')}>
@@ -102,6 +103,7 @@ async function Queue({ searchParams }: Pick<PageProps<'/admin/retete'>, 'searchP
                     </tbody>
                   </table>
                 ) : null}
+                {unreadable ? <p className="mt-3 rounded-xl bg-warn-50 px-3 py-2 text-[13.5px] text-warn">Valorile nu pot fi citite: rețeta a fost criptată cu o altă cheie decât <code>DATA_ENCRYPTION_KEY</code> de acum. Repune cheia cu care a fost salvată sau cere rețeta din nou.</p> : null}
                 {values ? <p className="mt-2 text-[13.5px]">PD {values.pd.mode === 'single' ? `${values.pd.value} mm` : values.pd.mode === 'dual' ? `${values.pd.right} / ${values.pd.left} mm` : <strong className="text-warn">necunoscut — se măsoară la telefon / în showroom</strong>}</p> : null}
                 {issues.length ? (
                   <ul className="mt-3 flex flex-col gap-1 text-[13px]">
