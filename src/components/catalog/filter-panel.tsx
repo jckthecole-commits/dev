@@ -2,12 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { createContext, use, useRef, useState, useTransition } from 'react'
-import { FrameArt } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
+import { shapeIconSrc } from '@/lib/frame-images'
 import { cn } from '@/lib/cn'
 import { activeFilterCount, AUDIENCES, COLOR_FAMILIES, FEATURES, filtersToQuery, FITS, MATERIALS, RIMS, SHAPES, SORTS, type CatalogFilters } from '@/lib/catalog-filters'
 import type { Facets } from '@/lib/catalog-query'
-import type { Shape } from '@/lib/frame-geometry'
 
 const PendingCtx = createContext<{ pending: boolean; go: (f: CatalogFilters) => void } | null>(null)
 
@@ -131,13 +130,7 @@ function Panel({ filters, facets, category }: { filters: CatalogFilters; facets:
         <div className="flex flex-col">
           {SHAPES.filter((s) => count(facets.shape, s.value) > 0 || filters.shape.includes(s.value)).map((s) => (
             <Check key={s.value} checked={filters.shape.includes(s.value)} onChange={() => set({ shape: toggle(filters.shape, s.value) })} label={s.plural} n={count(facets.shape, s.value)}>
-              <FrameArt
-                product={{ shape: s.value as Shape, lensWidth: 50, lensHeight: s.value === 'round' ? 46 : 40, bridgeWidth: 18, rim: 'full', material: 'acetat', geometry: { rim: 4, bridgeStyle: 'keyhole' } }}
-                swatch={{ kind: 'solid', primary: '#0D1216' }}
-                mode="rim"
-                rimColor="#4A545B"
-                className="h-4 w-10 shrink-0"
-              />
+              <img src={shapeIconSrc(s.value, '4A545B')} alt="" width={40} height={16} decoding="async" className="h-4 w-10 shrink-0 object-contain" />
             </Check>
           ))}
         </div>

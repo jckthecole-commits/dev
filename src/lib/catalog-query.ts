@@ -17,6 +17,8 @@ export type CardVariant = {
   priceDelta: number
   isDefault: boolean
   available: number
+  /** Card drawing (generated SVG, versioned URL). */
+  art: string
 }
 
 export type ProductCard = {
@@ -50,6 +52,34 @@ export type ProductCard = {
   searchText: string
   image: { key: string; alt: string; width: number | null; height: number | null } | null
   variants: CardVariant[]
+  /** Width × height of the drawing's viewBox — the card reserves exactly this box. */
+  artBox: [number, number]
+}
+
+/** Exactly what a product card renders — server pages send only this to the client. */
+export type CardView = Pick<ProductCard, 'id' | 'slug' | 'name' | 'category' | 'material' | 'lensWidth' | 'bridgeWidth' | 'templeLength' | 'frameWidth' | 'weightGrams' | 'price' | 'compareAtPrice' | 'badge' | 'image' | 'artBox'> & {
+  variants: Pick<CardVariant, 'id' | 'colorName' | 'colorSlug' | 'swatch' | 'priceDelta' | 'isDefault' | 'available' | 'art'>[]
+}
+
+export function cardView(p: ProductCard): CardView {
+  return {
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    category: p.category,
+    material: p.material,
+    lensWidth: p.lensWidth,
+    bridgeWidth: p.bridgeWidth,
+    templeLength: p.templeLength,
+    frameWidth: p.frameWidth,
+    weightGrams: p.weightGrams,
+    price: p.price,
+    compareAtPrice: p.compareAtPrice,
+    badge: p.badge,
+    image: p.image,
+    artBox: p.artBox,
+    variants: p.variants.map((v) => ({ id: v.id, colorName: v.colorName, colorSlug: v.colorSlug, swatch: v.swatch, priceDelta: v.priceDelta, isDefault: v.isDefault, available: v.available, art: v.art })),
+  }
 }
 
 export type Facet = { value: string; count: number }

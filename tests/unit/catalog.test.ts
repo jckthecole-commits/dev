@@ -25,7 +25,8 @@ describe('catalog filters ↔ URL', () => {
 describe('catalog query', () => {
   const card = (o: Partial<ProductCard>): ProductCard => ({
     id: o.slug ?? 'x', slug: 'x', name: 'X', family: 'X', modelCode: 'SV-X', category: 'optical', audience: 'unisex', shape: 'round', material: 'acetat', rim: 'full', lensWidth: 50, bridgeWidth: 20, templeLength: 145, lensHeight: 40, frameWidth: 130, weightGrams: 18, geometry: { rim: 4, bridgeStyle: 'keyhole' }, price: 30000, compareAtPrice: null, badge: null, tagline: null, features: [], polarized: false, filterCategory: null, featured: false, position: 0, publishedAt: null, searchText: '', image: null,
-    variants: [{ id: 'v', sku: 'S', colorName: 'Negru', colorSlug: 'negru', colorFamily: 'negru', swatch: { kind: 'solid', primary: '#000' }, priceDelta: 0, isDefault: true, available: 3 }],
+    variants: [{ id: 'v', sku: 'S', colorName: 'Negru', colorSlug: 'negru', colorFamily: 'negru', swatch: { kind: 'solid', primary: '#000' }, priceDelta: 0, isDefault: true, available: 3, art: '/imagini/rame/x/negru.svg' }],
+    artBox: [150, 60],
     ...o,
   })
   const all = [card({ slug: 'a', lensWidth: 49, price: 20000 }), card({ slug: 'b', lensWidth: 52, shape: 'square', price: 35000 }), card({ slug: 'c', lensWidth: 55, price: 40000 })]

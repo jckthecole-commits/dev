@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 import type { Swatch } from '@/lib/db/schema'
 import { frameLayout, type FrameSpec } from '@/lib/frame-geometry'
 import { swatchCss } from '@/lib/product-art'
+import { onFirstInteraction } from '@/lib/interaction'
 import type { HeroEngine } from '@/components/three/hero-engine'
 
 export type HeroFrame = {
@@ -163,67 +164,47 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
   const frame = frames[fi]!
   const variant = frame.variants[vi] ?? frame.variants[0]!
 
-  // CSS fallback loop (cursor-following DOM lens + CSS 3D tilt) — stops once WebGL takes over
+  // CSS fallback: the DOM lens and the CSS 3D frame follow a mouse cursor until WebGL takes over.
+  // Nothing runs per frame unless the cursor moves — the idle sway is a compositor-only CSS animation.
   useEffect(() => {
     const hero = heroRef.current
     if (!hero || gl) return
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches || window.innerWidth < 1024) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const coarse = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 1024
     const t = { x: 0.62, y: 0.44 }
     const c = { x: 0.62, y: 0.44 }
-    let active = false
-    let visible = true
     let raf = 0
-    const t0 = performance.now()
+    const tick = () => {
+      const k = reduce ? 1 : 0.14
+      c.x += (t.x - c.x) * k
+      c.y += (t.y - c.y) * k
+      const st = hero.style
+      st.setProperty('--mx', `${(c.x * 100).toFixed(2)}%`)
+      st.setProperty('--my', `${(c.y * 100).toFixed(2)}%`)
+      st.setProperty('--ry', `${((c.x - 0.5) * 54).toFixed(2)}deg`)
+      st.setProperty('--rx', `${(4 - (c.y - 0.5) * 30).toFixed(2)}deg`)
+      st.setProperty('--spec', `${(c.x * 70 - 35).toFixed(1)}px`)
+      raf = Math.abs(t.x - c.x) + Math.abs(t.y - c.y) > 0.0008 ? requestAnimationFrame(tick) : 0
+    }
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return
       const r = hero.getBoundingClientRect()
       t.x = (e.clientX - r.left) / r.width
       t.y = (e.clientY - r.top) / r.height
-      active = true
+      hero.dataset.pointer = ''
+      if (!raf) raf = requestAnimationFrame(tick)
     }
-    const onLeave = () => (active = false)
-    const tick = (now: number) => {
-      raf = requestAnimationFrame(tick)
-      if (!visible) return
-      const s = (now - t0) / 1000
-      let tx = t.x
-      let ty = t.y
-      if (coarse) {
-        tx = 0.5
-        ty = 0.5
-      } else if (!active && !reduce) {
-        tx = 0.56 + 0.1 * Math.sin(s * 0.45)
-        ty = 0.4 + 0.13 * Math.sin(s * 0.72 + 1)
-      }
-      const k = reduce ? 1 : 0.09
-      c.x += (tx - c.x) * k
-      c.y += (ty - c.y) * k
-      const st = hero.style
-      if (!coarse) {
-        st.setProperty('--mx', `${(c.x * 100).toFixed(2)}%`)
-        st.setProperty('--my', `${(c.y * 100).toFixed(2)}%`)
-      }
-      const ry = coarse ? (reduce ? 0 : Math.sin(s * 1.2) * 14) : (c.x - 0.5) * 54
-      const rx = coarse ? 4 : 4 - (c.y - 0.5) * 30
-      st.setProperty('--ry', `${ry.toFixed(2)}deg`)
-      st.setProperty('--rx', `${rx.toFixed(2)}deg`)
-      st.setProperty('--spec', `${((coarse ? 0.5 + ry / 60 : c.x) * 70 - 35).toFixed(1)}px`)
-    }
-    const io = new IntersectionObserver(([en]) => (visible = !!en?.isIntersecting))
-    io.observe(hero)
+    const onLeave = () => delete hero.dataset.pointer
     hero.addEventListener('pointermove', onMove)
     hero.addEventListener('pointerleave', onLeave)
-    raf = requestAnimationFrame(tick)
     return () => {
       cancelAnimationFrame(raf)
-      io.disconnect()
       hero.removeEventListener('pointermove', onMove)
       hero.removeEventListener('pointerleave', onLeave)
     }
   }, [gl])
 
-  // WebGL: loaded after first paint, only where it makes sense
+  // WebGL
   useEffect(() => {
     const hero = heroRef.current
     const canvas = canvasRef.current
@@ -254,14 +235,16 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
         console.warn('3D hero unavailable', e)
       }
     }
-    const delay = hero.dataset.intro === 'play' ? 1400 : 250
-    const timer = window.setTimeout(() => {
-      if ('requestIdleCallback' in window) window.requestIdleCallback(() => void start(), { timeout: 1200 })
+    // three.js waits for the visitor's first move — the first load stays light and the CSS frame is complete on its own
+    let idle = 0
+    const stop = onFirstInteraction(() => {
+      if ('requestIdleCallback' in window) idle = window.requestIdleCallback(() => void start(), { timeout: 600 })
       else void start()
-    }, delay)
+    })
     return () => {
       cancelled = true
-      window.clearTimeout(timer)
+      stop()
+      if (idle) window.cancelIdleCallback(idle)
       engineRef.current?.dispose()
       engineRef.current = null
     }
@@ -283,20 +266,12 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
     <section
       ref={heroRef}
       aria-label="Sifra Vision — de la neclar la clar"
-      suppressHydrationWarning
       data-gl={gl ? 'on' : undefined}
       className="hero-focus relative -mt-[var(--header-h)] overflow-hidden bg-fog"
       style={{ ['--mx' as string]: '62%', ['--my' as string]: '44%', ['--r' as string]: 'var(--lens-r)' }}
     >
-      {/* Plays the intro once per session — decided before first paint. */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `(function(){var e=document.currentScript.parentElement;try{if(sessionStorage.getItem('sv-intro')||matchMedia('(prefers-reduced-motion: reduce)').matches){e.dataset.intro='skip'}else{sessionStorage.setItem('sv-intro','1');e.dataset.intro='play'}}catch(_){e.dataset.intro='skip'}})()`,
-        }}
-      />
-
       {/* blurred optotype */}
-      <div ref={chartRef} aria-hidden className="hero-chart absolute text-ink opacity-[.42] blur-[10px]">
+      <div ref={chartRef} aria-hidden className="hero-chart chart-blur absolute opacity-[.42]">
         <EyeChart />
       </div>
       {/* CSS fallback: sharp optotype inside a cursor lens */}
@@ -310,7 +285,7 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
       <div aria-hidden className="hero-domlens lens-ring pointer-events-none absolute z-[6]" style={{ left: 'var(--mx)', top: 'var(--my)', width: 'calc(var(--r) * 2)', height: 'calc(var(--r) * 2)', margin: 'calc(var(--r) * -1) 0 0 calc(var(--r) * -1)' }}>
         <div className="absolute left-1/2 top-1/2 -ml-[3px] -mt-[3px] size-1.5 rounded-full bg-cobalt" />
         <div className="absolute left-[22%] top-[10%] h-[16%] w-[34%] rotate-[-24deg] rounded-full" style={{ background: 'radial-gradient(closest-side, rgba(255,255,255,.65), rgba(255,255,255,0))' }} />
-        <div className="eyebrow absolute -bottom-[30px] left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] text-ink">FOCUS 100%</div>
+        <div className="eyebrow absolute -bottom-[30px] left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] text-ink max-lg:hidden">FOCUS 100%</div>
       </div>
 
       {/* WebGL glasses */}
@@ -320,11 +295,8 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
       <div ref={anchorRef} aria-hidden className="hero-frame absolute z-[8]" style={{ perspective: 1400 }}>
         <div className="hero-frame-art pointer-events-none">
           <div className="animate-float" style={{ transformStyle: 'preserve-3d' }}>
-            <div className="hidden lg:block">
+            <div className="frame3d-sway" style={{ transformStyle: 'preserve-3d' }}>
               <Frame3D art={frame.art} swatch={variant.swatch} widthPx={560} />
-            </div>
-            <div className="lg:hidden">
-              <Frame3D art={frame.art} swatch={variant.swatch} widthPx={290} />
             </div>
           </div>
           <div className="absolute inset-x-[14%] -bottom-[60px] h-6 rounded-full" style={{ background: 'radial-gradient(closest-side, rgba(13,18,22,.22), rgba(13,18,22,0))' }} />
@@ -384,17 +356,6 @@ export function HeroFocus({ frames }: { frames: HeroFrame[] }) {
 
       <div className="grain z-30" aria-hidden />
 
-      {/* intro: ring draws, wordmark focuses, iris opens */}
-      <div aria-hidden className="intro pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-fog">
-        <div className="relative grid place-items-center">
-          <svg width="200" height="200" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="90" fill="none" stroke="#0D1216" strokeWidth="1.5" transform="rotate(-90 100 100)" style={{ strokeDasharray: 566, strokeDashoffset: 566, animation: 'draw .7s cubic-bezier(.65,0,.35,1) .05s forwards' }} />
-          </svg>
-          <div className="disp-wide absolute whitespace-nowrap text-[26px] font-semibold tracking-[0.18em] sm:text-[30px]" style={{ animation: 'word-focus .6s var(--ease-out-soft) .45s both' }}>
-            SIFRA VISION
-          </div>
-        </div>
-      </div>
     </section>
   )
 }

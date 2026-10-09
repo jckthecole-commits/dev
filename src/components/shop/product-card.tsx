@@ -2,20 +2,19 @@
 
 import Link from 'next/link'
 import { useRef, useState, ViewTransition } from 'react'
-import { FrameArt } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/format'
-import type { ProductCard as Card } from '@/lib/catalog-query'
-import { artOf, swatchCss } from '@/lib/product-art'
+import type { CardView } from '@/lib/catalog-query'
+import { swatchCss } from '@/lib/product-art'
 import { FavoriteButton } from './favorite-button'
 
 export const MATERIAL: Record<string, string> = { acetat: 'acetat', metal: 'metal', titan: 'titan', tr90: 'TR90', combinat: 'combinat' }
 
-export function ProductCard({ product: p, initialVariant, eager }: { product: Card; initialVariant?: string; eager?: boolean }) {
+export function ProductCard({ product: p, initialVariant, eager }: { product: CardView; initialVariant?: string; eager?: boolean }) {
   const [vid, setVid] = useState(initialVariant ?? (p.variants.find((v) => v.isDefault) ?? p.variants[0])!.id)
   const v = p.variants.find((x) => x.id === vid) ?? p.variants[0]!
-  const art = artOf(p)
+  const [bw, bh] = p.artBox
   const [loupe, setLoupe] = useState<{ x: number; y: number } | null>(null)
   const box = useRef<HTMLDivElement>(null)
   const href = `/rame/${p.slug}${v.isDefault ? '' : `?culoare=${v.colorSlug}`}`
@@ -41,7 +40,8 @@ export function ProductCard({ product: p, initialVariant, eager }: { product: Ca
             <div className="absolute inset-0 grid place-items-center">
               <ViewTransition name={`frame-${p.slug}`}>
                 <div style={{ width: `${scale}%` }} className="transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:-translate-y-1">
-                  <FrameArt product={art} swatch={v.swatch} shadow className="h-auto w-full" title={`${p.name} ${v.colorName}`} />
+                  {/* generated drawing as an image: decoded off the main thread, nothing to hydrate */}
+                  <img src={v.art} alt={`${p.name}, ${v.colorName}`} width={Math.round(bw * 10)} height={Math.round(bh * 10)} loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} decoding="async" draggable={false} className="block h-auto w-full" />
                 </div>
               </ViewTransition>
             </div>
@@ -50,7 +50,7 @@ export function ProductCard({ product: p, initialVariant, eager }: { product: Ca
             <div aria-hidden className="pointer-events-none absolute inset-0" style={{ clipPath: `circle(64px at ${loupe.x}px ${loupe.y}px)` }}>
               <div className="absolute inset-0 grid place-items-center bg-glass" style={{ transformOrigin: `${loupe.x}px ${loupe.y}px`, transform: 'scale(2.3)' }}>
                 <div style={{ width: `${scale}%` }}>
-                  <FrameArt product={art} swatch={v.swatch} className="h-auto w-full" idSalt="loupe" />
+                  <img src={v.art} alt="" width={Math.round(bw * 10)} height={Math.round(bh * 10)} decoding="async" draggable={false} className="block h-auto w-full" />
                 </div>
               </div>
             </div>

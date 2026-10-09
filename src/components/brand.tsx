@@ -1,19 +1,24 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
+import { WORDMARK as W } from './wordmark-paths'
 
-/** „Sifra Vision” wordmark — two words, legible & searchable; the O is a lens with its cobalt reflection. */
+/** „Sifra Vision” wordmark — outlines from Mona Sans (no extra font weights to load); the O is a lens with its cobalt reflection. */
 export function Wordmark({ className, size = 22, href = '/', label = 'Sifra Vision — acasă', inverted = false }: { className?: string; size?: number; href?: string | null; label?: string; inverted?: boolean }) {
   const ink = inverted ? '#EEF1EF' : 'currentColor'
+  const k = size / W.em
   const mark = (
-    <span className={cn('inline-flex items-center whitespace-nowrap leading-none', className)} style={{ fontSize: size }}>
-      <span className="disp-wide font-bold tracking-[0.14em]">SIFRA</span>
-      <span className="disp-wide ml-[0.45em] font-light tracking-[0.14em]">VISI</span>
-      <svg width="0.92em" height="0.92em" viewBox="0 0 20 20" aria-hidden="true" className="mx-[0.12em] shrink-0">
-        <circle cx="10" cy="10" r="8.2" fill="none" stroke={ink} strokeWidth="1.6" />
-        <path d="M5.5 7.2 A5.5 5.5 0 0 1 9 4.6" fill="none" stroke="#2638C9" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-      <span className="disp-wide font-light tracking-[0.14em]">N</span>
-    </span>
+    <svg
+      viewBox={`0 ${W.top} ${W.width} ${W.height}`}
+      width={Math.round(W.width * k)}
+      height={Math.round(W.height * k)}
+      className={cn('block shrink-0', className)}
+      {...(href ? { 'aria-hidden': true } : { role: 'img', 'aria-label': 'Sifra Vision' })}
+    >
+      <path d={W.bold} fill={ink} />
+      <path d={W.light} fill={ink} />
+      <circle cx={W.ring.cx} cy={W.ring.cy} r={W.ring.r} fill="none" stroke={ink} strokeWidth={W.ring.stroke} />
+      <path d={W.ring.arc} fill="none" stroke="#2638C9" strokeWidth={W.ring.stroke} strokeLinecap="round" />
+    </svg>
   )
   if (!href) return mark
   return (

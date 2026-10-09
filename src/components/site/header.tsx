@@ -1,25 +1,13 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Wordmark } from '@/components/brand'
-import { FrameArt } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
+import { shapeIconSrc } from '@/lib/frame-images'
 import { SHAPES } from '@/lib/catalog-filters'
-import type { Shape } from '@/lib/frame-geometry'
 import { getSettings } from '@/server/settings'
 import { CartCount } from './cart-count'
 import { MobileMenu } from './mobile-menu'
 import { SearchButton } from './search'
-
-export const SHAPE_ICON_SPEC = (shape: Shape) =>
-  ({
-    shape,
-    lensWidth: 50,
-    lensHeight: shape === 'round' ? 46 : shape === 'square' || shape === 'geometric' || shape === 'pilot' ? 44 : 38,
-    bridgeWidth: 18,
-    rim: shape === 'browline' ? ('full' as const) : ('full' as const),
-    material: 'acetat' as const,
-    geometry: { rim: 3.2, bridgeStyle: 'keyhole' as const, browWeight: 1.7 },
-  }) as const
 
 const NAV = [
   { href: '/rame-de-vedere', label: 'Rame de vedere', mega: true },
@@ -110,7 +98,7 @@ function MegaMenu() {
                   href={`/rame-de-vedere?forma=${s.slug}`}
                   className="group/s flex flex-col items-center gap-2 rounded-xl px-2 py-3 text-center text-[13px] font-medium no-underline transition-colors hover:bg-fog"
                 >
-                  <FrameArt product={SHAPE_ICON_SPEC(s.value)} swatch={{ kind: 'solid', primary: '#0D1216' }} mode="rim" rimColor="#0D1216" className="h-7 w-auto transition-transform duration-300 group-hover/s:scale-110" />
+                  <img src={shapeIconSrc(s.value)} alt="" width={56} height={28} loading="lazy" decoding="async" className="h-7 w-auto transition-transform duration-300 group-hover/s:scale-110" />
                   {s.plural}
                 </Link>
               </li>

@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 import type { Swatch } from '@/lib/db/schema'
-import { frameDataUri, frameLayout, type FrameSpec } from '@/lib/frame-geometry'
+import { frameDataUri, frameLayout, frameSvgString, type FrameSpec } from '@/lib/frame-geometry'
 import { artOf } from '@/lib/product-art'
 import { getProductBySlug } from '@/server/catalog'
 
@@ -8,14 +8,22 @@ import { getProductBySlug } from '@/server/catalog'
  * Square packshot rendered from the frame's real measurements: white
  * background, no text or badges (Google Merchant Center image rules).
  * URL: /imagini/rame/<slug>/<colour-slug>.png — stable, cacheable.
+ * The same URL with .svg serves the vector drawing used by product cards.
  */
 export async function GET(_: Request, { params }: RouteContext<'/imagini/rame/[slug]/[file]'>) {
   const { slug, file } = await params
-  const colorSlug = file.replace(/\.png$/, '')
+  const svg = file.endsWith('.svg')
+  const colorSlug = file.replace(/\.(png|svg)$/, '')
   const p = await getProductBySlug(slug)
   const v = p?.variants.find((x) => x.colorSlug === colorSlug) ?? (colorSlug === 'implicit' ? p?.variants[0] : undefined)
   if (!p || !v) return new Response('Not found', { status: 404 })
   const spec = artOf(p) as FrameSpec
+  if (svg) {
+    // the card drawing (URL carries a version key, so it can be cached for good)
+    return new Response(frameSvgString(spec, v.swatch as Swatch, { shadow: true, idSalt: 'c' }), {
+      headers: { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=31536000, immutable' },
+    })
+  }
   const [, , vw, vh] = frameLayout(spec).viewBox
   const w = 1040
   const h = Math.round((w * vh) / vw)

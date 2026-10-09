@@ -4,6 +4,9 @@ import { cacheLife, cacheTag } from 'next/cache'
 import { db } from '@/lib/db'
 import { inventory, location, lensIndex, lensTreatment, lensType, product, productImage, review, variant } from '@/lib/db/schema'
 import type { ProductCard } from '@/lib/catalog-query'
+import { frameImageSrc } from '@/lib/frame-images'
+import { frameLayout, type FrameSpec } from '@/lib/frame-geometry'
+import { artOf } from '@/lib/product-art'
 import type { LensCatalog } from '@/lib/pricing'
 
 /** All active products of a category with variants & sellable stock. Cached; invalidated by tag. */
@@ -46,6 +49,8 @@ export async function getCatalog(category: 'optical' | 'sun' | 'all' = 'all'): P
 
   return rows.map((p) => {
     const img = images.find((i) => i.productId === p.id)
+    const art = artOf(p as Parameters<typeof artOf>[0])
+    const [, , vw, vh] = frameLayout(art as FrameSpec).viewBox
     return {
       id: p.id,
       slug: p.slug,
@@ -88,7 +93,9 @@ export async function getCatalog(category: 'optical' | 'sun' | 'all' = 'all'): P
           priceDelta: v.priceDelta,
           isDefault: v.isDefault,
           available: v.available,
+          art: frameImageSrc(p.slug, v.colorSlug, { art, swatch: v.swatch }),
         })),
+      artBox: [Math.round(vw * 10) / 10, Math.round(vh * 10) / 10] as [number, number],
     }
   })
 }

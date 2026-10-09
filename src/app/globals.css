@@ -136,6 +136,12 @@
   }
 }
 
+/* Below-the-fold sections skip style, layout and paint until they come near the viewport. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
 /* ── Typography ─────────────────────────────────────────────────────────── */
 @utility disp {
   font-family: var(--font-display);
@@ -171,6 +177,11 @@
 @utility disp-wide {
   font-family: var(--font-display);
   font-stretch: 125%;
+}
+/* Kinetic width: the variable-width display face is attached after load, so the first
+   paint only needs the small static one (same metrics at 112 %, so nothing jumps). */
+:root[data-type='flex'] :is(.disp-wide, .type-flex, .morph-row-name, .morph-name) {
+  font-family: var(--font-mona-flex), var(--font-display);
 }
 @utility eyebrow {
   font-family: var(--font-mono);
@@ -530,26 +541,6 @@
     stroke-dashoffset: 0;
   }
 }
-@keyframes iris {
-  from {
-    --hole: 0px;
-  }
-  to {
-    --hole: 140vmax;
-  }
-}
-@keyframes word-focus {
-  from {
-    filter: blur(22px);
-    opacity: 0.2;
-    letter-spacing: 0.5em;
-  }
-  to {
-    filter: blur(0);
-    opacity: 1;
-    letter-spacing: 0.18em;
-  }
-}
 @keyframes shimmer {
   from {
     background-position: 100% 0;
@@ -557,12 +548,6 @@
   to {
     background-position: -100% 0;
   }
-}
-
-@property --hole {
-  syntax: '<length>';
-  inherits: false;
-  initial-value: 0px;
 }
 
 .ltr {
@@ -621,9 +606,11 @@
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.06;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* a small pre-rendered noise tile, normal blending: costs nothing at first paint
+     (an feTurbulence filter + multiply blend over the whole hero cost ~40 ms of raster) */
+  opacity: 0.045;
+  background: url('/grain.png') repeat;
+  background-size: 96px 96px;
 }
 
 /* Frame specular sweep (driven by --spec on an ancestor) */
@@ -667,20 +654,31 @@
    ════════════════════════════════════════════════════════════════════════ */
 .hero-focus {
   --lens-r: 150px;
-  --intro-delay: 0.1s;
+  --intro-delay: 0.05s;
   height: clamp(720px, 100svh, 940px);
   cursor: default;
 }
-.hero-focus[data-intro='play'] {
-  --intro-delay: 1.15s;
+/* the out-of-focus optotype: blur drawn as a glyph shadow — same look as filter: blur(10px),
+   without a full-size filtered layer at first paint */
+.chart-blur {
+  color: transparent;
+  text-shadow: 0 0 20px var(--color-ink);
 }
-.hero-focus:not([data-intro='play']) .intro {
-  display: none;
+/* the CSS lens arrives a beat after first paint (it is a second, clipped copy of the chart) */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-domlens {
+    animation: lens-in 0.6s var(--ease-out-soft) 0.35s both;
+  }
 }
-.hero-focus .intro {
-  -webkit-mask: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1px));
-  mask: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1px));
-  animation: iris 0.5s cubic-bezier(0.7, 0, 0.2, 1) 1.05s both;
+@keyframes lens-in {
+  from {
+    opacity: 0;
+    visibility: hidden;
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 .hero-chart {
   left: 50%;
@@ -695,6 +693,23 @@
 }
 .frame3d {
   transform: rotateX(var(--rx, 4deg)) rotateY(var(--ry, -12deg)) rotateZ(calc(var(--ry, -12deg) * -0.06));
+}
+/* idle sway of the CSS frame: transform-only, runs on the compositor; a mouse takes over via --rx/--ry */
+@media (prefers-reduced-motion: no-preference) {
+  .frame3d-sway {
+    animation: frame-sway 7s var(--ease-in-out-soft) infinite alternate;
+  }
+  .hero-focus[data-pointer] .frame3d-sway {
+    animation-play-state: paused;
+  }
+}
+@keyframes frame-sway {
+  from {
+    transform: rotateY(-9deg) rotateX(1deg);
+  }
+  to {
+    transform: rotateY(13deg) rotateX(-2deg);
+  }
 }
 /* WebGL glasses: the canvas fades in over the CSS fallback, which then hides */
 .hero-gl {
@@ -774,9 +789,9 @@
 }
 @media (max-width: 1023px) {
   .hero-focus {
-    --lens-r: 104px;
+    --lens-r: 88px;
     --mx: 50% !important;
-    --my: 300px !important;
+    --my: 252px !important;
     height: auto;
     min-height: max(100svh, 760px);
   }
@@ -792,6 +807,10 @@
   .hero-frame {
     top: 196px;
     margin-left: -145px;
+  }
+  /* one CSS frame for every size: 560 px art, zoomed to 290 px (zoom keeps layout in step) */
+  .hero-frame-art {
+    zoom: 0.518;
   }
   /* mobile: stack — glasses & switcher on top, copy flows below them */
   .hero-copy {

@@ -55,7 +55,7 @@ export async function SiteFooter() {
   const hours = s.hours.weekly
   const fmt = (d: (typeof hours)[number]) => ('closed' in d ? 'închis' : `${d.open}–${d.close}`)
   return (
-    <footer className="relative mt-24 overflow-hidden bg-ink text-fog">
+    <footer className="cv-auto relative mt-24 overflow-hidden bg-ink text-fog">
       <div className="container-x relative pb-10 pt-16">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <div className="flex flex-col gap-6">
@@ -139,7 +139,7 @@ export async function SiteFooter() {
           </div>
         </div>
       </div>
-      <div aria-hidden className="pointer-events-none select-none overflow-hidden whitespace-nowrap px-[var(--gutter)] pb-2 font-display text-[clamp(48px,12.2vw,200px)] font-extrabold leading-[.78] tracking-[-0.03em] text-white/[.04]" style={{ fontStretch: '125%' }}>
+      <div aria-hidden className="type-flex pointer-events-none select-none overflow-hidden whitespace-nowrap px-[var(--gutter)] pb-2 font-display text-[clamp(48px,12.2vw,200px)] font-extrabold leading-[.78] tracking-[-0.03em] text-white/[.04]" style={{ fontStretch: '125%' }}>
         SIFRA VISION
       </div>
     </footer>

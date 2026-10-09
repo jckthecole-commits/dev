@@ -1,7 +1,8 @@
+import { Suspense } from 'react'
 import { ConsentManager } from '@/components/site/consent'
 import { SiteFooter } from '@/components/site/footer'
 import { SiteHeader } from '@/components/site/header'
-import { Magnetic } from '@/components/site/magnetic'
+import { SiteEnhancements } from '@/components/site/enhancements'
 import { JsonLd } from '@/components/seo/json-ld'
 import { organizationLd, websiteLd } from '@/lib/seo'
 import { getSettings } from '@/server/settings'
@@ -16,9 +17,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <JsonLd data={[organizationLd(settings), websiteLd()]} />
       <SiteHeader />
       <main id="continut">{children}</main>
-      <SiteFooter />
+      <Suspense>
+        <SiteFooter />
+      </Suspense>
       <ConsentManager />
-      <Magnetic />
+      <SiteEnhancements />
     </>
   )
 }

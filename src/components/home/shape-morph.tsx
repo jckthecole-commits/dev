@@ -205,7 +205,7 @@ export function ShapeMorph({ shapes }: { shapes: MorphShape[] }) {
   const s = shapes[active]!
   const longest = shapes.reduce((a, x) => (x.intro.length > a.length ? x.intro : a), '')
   return (
-    <section ref={sectionRef} aria-labelledby="forme" className="container-x py-24">
+    <section ref={sectionRef} aria-labelledby="forme" className="cv-auto container-x py-24">
       <div className="mb-10 max-w-3xl md:mb-12">
         <div className="eyebrow mb-3">Rame de vedere</div>
         <h2 id="forme" className="disp focus-reveal text-[clamp(34px,4.6vw,60px)]">

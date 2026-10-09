@@ -2,11 +2,18 @@
 
 import { useEffect } from 'react'
 
-/**
- * Elements marked `data-magnetic` lean towards a nearby mouse cursor.
- * One passive listener for the whole site; mouse + hover devices only.
- */
-export function Magnetic() {
+/** Small site-wide extras that never compete with the first paint. */
+export function SiteEnhancements() {
+  // kinetic type: attach the variable-width display face once the page has loaded
+  useEffect(() => {
+    const go = () => (document.documentElement.dataset.type = 'flex')
+    const later = () => (typeof requestIdleCallback === 'function' ? requestIdleCallback(go, { timeout: 2500 }) : setTimeout(go, 300))
+    if (document.readyState === 'complete') later()
+    else window.addEventListener('load', later, { once: true })
+    return () => window.removeEventListener('load', later)
+  }, [])
+
+  // elements marked `data-magnetic` lean towards a nearby mouse cursor (one passive listener, mouse only)
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return

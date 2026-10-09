@@ -11,6 +11,7 @@ import { cn } from '@/lib/cn'
 import type { Swatch } from '@/lib/db/schema'
 import { formatFrameSize, formatPrice } from '@/lib/format'
 import { flyToCart } from '@/lib/fly-to-cart'
+import { onFirstInteraction } from '@/lib/interaction'
 import type { FrameSpec } from '@/lib/frame-geometry'
 import { swatchCss } from '@/lib/product-art'
 import { noSubscribe, webglServerSnapshot, webglSnapshot } from '@/lib/webgl'
@@ -104,12 +105,17 @@ export function ProductView({ product: p, initialColor, productionDays }: { prod
           // no WebGL after all — the drawn front view stays
         }
       }
-      if ('requestIdleCallback' in window) window.requestIdleCallback(() => void go(), { timeout: 1500 })
-      else setTimeout(() => void go(), 300)
+      // …and only after the visitor's first move, so the first load stays light
+      stopWaiting = onFirstInteraction(() => {
+        if ('requestIdleCallback' in window) window.requestIdleCallback(() => void go(), { timeout: 800 })
+        else setTimeout(() => void go(), 50)
+      })
     })
+    let stopWaiting = () => {}
     io.observe(galleryRef.current!)
     return () => {
       cancelled = true
+      stopWaiting()
       io.disconnect()
       engine?.dispose()
       engineRef.current = null

@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { FrameArt, type FrameArtProduct } from '@/components/frame-art'
+import type { FrameArtProduct } from '@/components/frame-art'
 import { Icon } from '@/components/icons'
 import type { Swatch } from '@/lib/db/schema'
 import type { FrameSpec } from '@/lib/frame-geometry'
+import { onFirstInteraction } from '@/lib/interaction'
 import { noSubscribe, webglServerSnapshot, webglSnapshot } from '@/lib/webgl'
 import type { AnatomyEngine } from '@/components/three/anatomy-engine'
 
@@ -16,6 +17,8 @@ export type AnatomyData = {
   price: string
   art: FrameArtProduct
   swatch: Swatch
+  /** Pre-drawn front view (generated SVG) for the static state */
+  img: { src: string; box: [number, number] }
   templeLength: number
   frameWidth: number
   lensWidth: number
@@ -88,47 +91,53 @@ export function AnatomySection({ data }: { data: AnatomyData }) {
     const section = sectionRef.current!
     let engine: AnatomyEngine | null = null
     let cancelled = false
+    let stopWaiting = () => {}
+    const load = async () => {
+      try {
+        const { startAnatomyEngine } = await import('@/components/three/anatomy-engine')
+        if (cancelled) return
+        engine = await startAnatomyEngine({
+          canvas: canvasRef.current!,
+          section,
+          stage: stageRef.current!,
+          overlay: {
+            svg: svgRef.current!,
+            leader: leaderRef.current!,
+            dot: dotRef.current!,
+            dims: [0, 1].map((i) => ({ line: dimLines.current[i]!, text: dimTexts.current[i]! })),
+          },
+          spec: data.art as FrameSpec,
+          swatch: data.swatch,
+          templeLength: data.templeLength,
+          knuckles: data.knuckles ?? 1,
+          labels: {
+            frameWidth: `${data.frameWidth} mm`,
+            lensWidth: `${data.lensWidth} mm`,
+            lensHeight: `${data.lensHeight} mm`,
+            temple: `${data.templeLength} mm`,
+            bridge: `${data.bridgeWidth} mm`,
+          },
+          onReady: () => setReady(true),
+        })
+        if (cancelled) engine.dispose()
+      } catch {
+        // no WebGL after all — the static version stays
+        setFailed(true)
+      }
+    }
+    // three.js waits until the section is near and the visitor has interacted (scrolling here counts)
     const io = new IntersectionObserver(
-      async ([en]) => {
+      ([en]) => {
         if (!en?.isIntersecting) return
         io.disconnect()
-        try {
-          const { startAnatomyEngine } = await import('@/components/three/anatomy-engine')
-          if (cancelled) return
-          engine = await startAnatomyEngine({
-            canvas: canvasRef.current!,
-            section,
-            stage: stageRef.current!,
-            overlay: {
-              svg: svgRef.current!,
-              leader: leaderRef.current!,
-              dot: dotRef.current!,
-              dims: [0, 1].map((i) => ({ line: dimLines.current[i]!, text: dimTexts.current[i]! })),
-            },
-            spec: data.art as FrameSpec,
-            swatch: data.swatch,
-            templeLength: data.templeLength,
-            knuckles: data.knuckles ?? 1,
-            labels: {
-              frameWidth: `${data.frameWidth} mm`,
-              lensWidth: `${data.lensWidth} mm`,
-              lensHeight: `${data.lensHeight} mm`,
-              temple: `${data.templeLength} mm`,
-              bridge: `${data.bridgeWidth} mm`,
-            },
-            onReady: () => setReady(true),
-          })
-          if (cancelled) engine.dispose()
-        } catch {
-          // no WebGL after all — the static version stays
-          setFailed(true)
-        }
+        stopWaiting = onFirstInteraction(() => void load())
       },
       { rootMargin: '900px 0px' },
     )
     io.observe(section)
     return () => {
       cancelled = true
+      stopWaiting()
       io.disconnect()
       engine?.dispose()
     }
@@ -147,7 +156,7 @@ export function AnatomySection({ data }: { data: AnatomyData }) {
       <div ref={stageRef} className="anat-stage">
         <canvas ref={canvasRef} className="anat-canvas" aria-hidden />
         <div className="anat-art" aria-hidden>
-          <FrameArt product={data.art} swatch={data.swatch} className="h-auto w-full" />
+          <img src={data.img.src} alt="" width={Math.round(data.img.box[0] * 10)} height={Math.round(data.img.box[1] * 10)} loading="lazy" decoding="async" className="block h-auto w-full" />
         </div>
         <svg ref={svgRef} className="anat-overlay" aria-hidden>
           <g className="anat-dims">

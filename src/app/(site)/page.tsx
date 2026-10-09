@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { AnatomySection, type AnatomyData } from '@/components/home/anatomy'
 import { HeroFocus, type HeroFrame } from '@/components/home/hero'
 import { B2BBand, Collection, FaqList, HowItWorks, JournalTeaser, SectionHead, Showroom, TrustStrip, TryOnPromo } from '@/components/home/sections'
@@ -67,29 +68,53 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={[opticianLd(settings), faqLd(faqs.slice(0, 8))]} />
+      {/* the hero stays in the shell (it holds the LCP); every block below is its own Suspense
+          boundary, so React hydrates them one by one and yields in between */}
       <HeroFocus frames={heroFrames} />
       <TrustStrip settings={settings} />
-      <ShapeMorph shapes={morphShapes} />
-      <Collection products={featured} eyebrow="Colecția SIFRA" title="Rame care se poartă *toată ziua.*" href="/rame-de-vedere" label="Vezi toate ramele" />
-      {anatomy ? <AnatomySection data={anatomy} /> : null}
+      <Suspense>
+        <ShapeMorph shapes={morphShapes} />
+      </Suspense>
+      <Suspense>
+        <Collection products={featured} eyebrow="Colecția SIFRA" title="Rame care se poartă *toată ziua.*" href="/rame-de-vedere" label="Vezi toate ramele" />
+      </Suspense>
+      {anatomy ? (
+        <Suspense>
+          <AnatomySection data={anatomy} />
+        </Suspense>
+      ) : null}
 
-      <section aria-labelledby="pret" className="container-x py-24">
+      <section aria-labelledby="pret" className="cv-auto container-x py-24">
         <SectionHead
           id="pret"
           eyebrow="Prețul complet, pe loc"
           title="Știi cât de groasă iese lentila. *Înainte să plătești.*"
           intro="Mutăm dioptria și vedem secțiunea reală a lentilei pe fiecare indice. Nu vindem „cel mai subțire” din reflex — doar ce se vede diferit pe fața ta."
         />
-        <ThicknessLab indices={lenses.indices.filter((i) => i.active).map((i) => ({ code: i.code, name: i.name, price: i.price }))} />
+        <Suspense>
+          <ThicknessLab indices={lenses.indices.filter((i) => i.active).map((i) => ({ code: i.code, name: i.name, price: i.price }))} />
+        </Suspense>
       </section>
 
-      <TryOnPromo frame={tryOnFrame} />
-      <HowItWorks />
-      <Collection products={sun.slice(0, 4)} eyebrow="Ochelari de soare" title="Numiți după locurile *unde îi porți.*" href="/ochelari-de-soare" label="Toți ochelarii de soare" />
-      <Showroom settings={settings} />
+      <Suspense>
+        <TryOnPromo frame={tryOnFrame} />
+      </Suspense>
+      <Suspense>
+        <HowItWorks />
+      </Suspense>
+      <Suspense>
+        <Collection products={sun.slice(0, 4)} eyebrow="Ochelari de soare" title="Numiți după locurile *unde îi porți.*" href="/ochelari-de-soare" label="Toți ochelarii de soare" />
+      </Suspense>
+      <Suspense>
+        <Showroom settings={settings} />
+      </Suspense>
       <B2BBand />
-      <JournalTeaser posts={posts.slice(0, 3)} />
-      <FaqList faqs={faqs.slice(0, 8)} />
+      <Suspense>
+        <JournalTeaser posts={posts.slice(0, 3)} />
+      </Suspense>
+      <Suspense>
+        <FaqList faqs={faqs.slice(0, 8)} />
+      </Suspense>
     </>
   )
 }
@@ -120,6 +145,7 @@ function anatomyOf(p: ProductCard | undefined): AnatomyData | null {
     price: formatPrice(p.price + v.priceDelta),
     art: artOf(p),
     swatch: v.swatch,
+    img: { src: v.art, box: p.artBox },
     templeLength: p.templeLength,
     frameWidth: p.frameWidth,
     lensWidth: p.lensWidth,

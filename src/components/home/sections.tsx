@@ -1,8 +1,7 @@
 import Link from 'next/link'
-import { FrameArt } from '@/components/frame-art'
 import { Icon, type IconName } from '@/components/icons'
 import { ProductCard } from '@/components/shop/product-card'
-import type { ProductCard as Card } from '@/lib/catalog-query'
+import { cardView, type ProductCard as Card } from '@/lib/catalog-query'
 import { formatDate } from '@/lib/format'
 import type { StoreSettings } from '@/lib/settings-schema'
 import { WEEKDAYS_RO } from '@/lib/settings-schema'
@@ -61,12 +60,12 @@ export function TrustStrip({ settings }: { settings: StoreSettings }) {
 
 export function Collection({ products, title, eyebrow, href, label }: { products: Card[]; title: string; eyebrow: string; href: string; label: string }) {
   return (
-    <section aria-label={title} className="container-x py-12">
+    <section aria-label={title.replace(/\*/g, '')} className="cv-auto container-x py-12">
       <SectionHead eyebrow={eyebrow} title={title} action={{ href, label }} />
       <div className="grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
         {products.map((p, i) => (
           <div key={p.id} className="focus-rise" style={{ animationDelay: `${(i % 4) * 50}ms` }}>
-            <ProductCard product={p} />
+            <ProductCard product={cardView(p)} />
           </div>
         ))}
       </div>
@@ -81,7 +80,7 @@ export function HowItWorks() {
     { n: '03', title: 'Trimiți rețeta', text: 'O completezi, încarci o poză sau o trimiți mai târziu. Optometristul o verifică, apoi montăm și livrăm.', href: '/ghid/prescriptie', cta: 'Cum citești rețeta' },
   ]
   return (
-    <section aria-labelledby="cum" className="container-x py-24">
+    <section aria-labelledby="cum" className="cv-auto container-x py-24">
       <SectionHead id="cum" eyebrow="Fără drum la optician" title="Cum comanzi ochelari *de vedere.*" />
       <ol className="grid gap-4 md:grid-cols-3">
         {steps.map((s) => (
@@ -99,10 +98,21 @@ export function HowItWorks() {
   )
 }
 
+const MESH = Array.from({ length: 5 }, (_, k) =>
+  Array.from({ length: 14 }, (_, j) => {
+    const i = j * 5 + k
+    const a = (i / 70) * Math.PI * 2
+    const r = 82 + (i % 5) * 9
+    const x = 136 + Math.cos(a) * r * 0.78
+    const y = 255 + Math.sin(a) * r * 1.12
+    return `M${(x - 1.2).toFixed(1)} ${y.toFixed(1)}a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0`
+  }).join(''),
+)
+
 export function TryOnPromo({ frame }: { frame: Card }) {
   const v = frame.variants[0]!
   return (
-    <section aria-labelledby="proba" className="container-x py-24">
+    <section aria-labelledby="proba" className="cv-auto container-x py-24">
       <div className="grid items-center gap-14 overflow-hidden rounded-[32px] bg-ink px-6 py-14 text-fog sm:px-12 lg:grid-cols-[1fr_420px] lg:py-20">
         <div>
           <div className="eyebrow text-fog/60">Probă virtuală · rulează în browser</div>
@@ -137,15 +147,14 @@ export function TryOnPromo({ frame }: { frame: Card }) {
           <div className="relative h-full w-full overflow-hidden rounded-[40px] bg-[#C9D0CC]">
             <div className="absolute inset-0" style={{ background: 'linear-gradient(110deg,#AEB7B2,#E1E6E3 60%)' }} />
             <div className="absolute left-[18%] top-[16%] h-[78%] w-[64%] rounded-[48%_48%_42%_42%] bg-[#8E7B6E] opacity-80 blur-[14px]" />
+            {/* face-mesh dots: five staggered groups, one path each */}
             <svg className="absolute inset-0 h-full w-full" viewBox="0 0 272 542">
-              {Array.from({ length: 70 }).map((_, i) => {
-                const a = (i / 70) * Math.PI * 2
-                const r = 82 + (i % 5) * 9
-                return <circle key={i} cx={136 + Math.cos(a) * r * 0.78} cy={255 + Math.sin(a) * r * 1.12} r="1.2" fill="#fff" opacity={0.45} style={{ animation: `fadeup 1.2s ${(i % 14) * 0.08}s infinite alternate` }} />
-              })}
+              {MESH.map((d, k) => (
+                <path key={k} d={d} fill="#fff" opacity={0.45} style={{ animation: `fadeup 1.2s ${k * 0.22}s infinite alternate` }} />
+              ))}
             </svg>
             <div className="absolute left-1/2 top-[38%] w-[86%] -translate-x-1/2 -translate-y-1/2">
-              <FrameArt product={{ shape: frame.shape as never, lensWidth: frame.lensWidth, lensHeight: frame.lensHeight, bridgeWidth: frame.bridgeWidth, rim: frame.rim, material: frame.material as never, geometry: frame.geometry, category: frame.category }} swatch={v.swatch} className="h-auto w-full drop-shadow-[0_8px_10px_rgba(0,0,0,.25)]" />
+              <img src={v.art} alt="" width={Math.round(frame.artBox[0] * 10)} height={Math.round(frame.artBox[1] * 10)} loading="lazy" decoding="async" className="block h-auto w-full drop-shadow-[0_8px_10px_rgba(0,0,0,.25)]" />
             </div>
             <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/85 p-3 text-ink backdrop-blur">
               <div className="flex items-center justify-between font-mono text-[11px] tracking-[0.08em]">
@@ -164,7 +173,7 @@ export function TryOnPromo({ frame }: { frame: Card }) {
 export function Showroom({ settings }: { settings: StoreSettings }) {
   const c = settings.company
   return (
-    <section aria-labelledby="showroom" className="container-x py-24">
+    <section aria-labelledby="showroom" className="cv-auto container-x py-24">
       <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
         <div>
           <div className="eyebrow">Showroom · Galați</div>
@@ -257,7 +266,7 @@ export function B2BBand() {
     ['file', 'Declarații de conformitate'],
   ]
   return (
-    <section aria-labelledby="b2b" className="container-x py-12">
+    <section aria-labelledby="b2b" className="cv-auto container-x py-12">
       <div className="relative overflow-hidden rounded-[32px] bg-cobalt px-6 py-14 text-white sm:px-12 lg:py-16">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-end">
           <div>
@@ -295,7 +304,7 @@ export function B2BBand() {
 
 export function JournalTeaser({ posts }: { posts: { slug: string; title: string; excerpt: string | null; category: string | null; readingMinutes: number | null; publishedAt: Date | null }[] }) {
   return (
-    <section aria-labelledby="jurnal" className="container-x py-24">
+    <section aria-labelledby="jurnal" className="cv-auto container-x py-24">
       <SectionHead id="jurnal" eyebrow="Jurnal" title="Ghiduri scrise de oameni *care măsoară ochi.*" action={{ href: '/jurnal', label: 'Toate ghidurile' }} />
       <ul className="grid gap-5 md:grid-cols-3">
         {posts.map((p, i) => (
@@ -322,7 +331,7 @@ export function JournalTeaser({ posts }: { posts: { slug: string; title: string;
 
 export function FaqList({ faqs, title = 'Întrebări frecvente' }: { faqs: { id: string; question: string; answer: string }[]; title?: string }) {
   return (
-    <section aria-labelledby="faq" className="container-x py-16">
+    <section aria-labelledby="faq" className="cv-auto container-x py-16">
       <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr]">
         <div>
           <div className="eyebrow">Ajutor</div>

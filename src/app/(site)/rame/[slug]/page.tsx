@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { SectionHead } from '@/components/home/sections'
+import { cardView } from '@/lib/catalog-query'
 import { Icon } from '@/components/icons'
 import { ProductView, ProductViewWithParams, type PdpProduct } from '@/components/product/product-view'
 import { Reviews } from '@/components/product/reviews'
@@ -127,79 +128,85 @@ export default async function ProductPage({ params }: Pick<PageProps<'/rame/[slu
         <ProductViewWithParams product={view} productionDays={production} />
       </Suspense>
 
-      <section aria-label="Dimensiuni" className="mt-28">
-        <SizeCompare spec={{ ...(artOf(p) as FrameSpec) }} temple={p.templeLength} frameWidth={p.frameWidth} />
-      </section>
+      <Suspense>
+        <section aria-label="Dimensiuni" className="cv-auto mt-28">
+          <SizeCompare spec={{ ...(artOf(p) as FrameSpec) }} temple={p.templeLength} frameWidth={p.frameWidth} />
+        </section>
 
-      <section aria-labelledby="despre" className="mt-28 grid gap-10 lg:grid-cols-[1fr_1.6fr]">
-        <div>
-          <div className="eyebrow">Despre model</div>
-          <h2 id="despre" className="disp mt-3 text-[clamp(30px,3.6vw,46px)]">
-            {p.tagline}
-          </h2>
-        </div>
-        <div>
-          <div className="prose-sv">
-            {(p.description ?? '').split('\n\n').map((para) => (
-              <p key={para.slice(0, 24)}>{para}</p>
-            ))}
+        <section aria-labelledby="despre" className="mt-28 grid gap-10 lg:grid-cols-[1fr_1.6fr]">
+          <div>
+            <div className="eyebrow">Despre model</div>
+            <h2 id="despre" className="disp mt-3 text-[clamp(30px,3.6vw,46px)]">
+              {p.tagline}
+            </h2>
           </div>
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-            {p.highlights.map((h) => (
-              <li key={h} className="flex items-center gap-3 rounded-xl bg-glass px-4 py-3 text-[15px] ring-1 ring-line-soft">
-                <Icon name="check" size={18} className="shrink-0 text-cobalt" /> {h}
-              </li>
-            ))}
-          </ul>
-          <details className="group mt-8 rounded-2xl bg-glass ring-1 ring-line-soft">
-            <summary className="flex items-center justify-between px-5 py-4 text-[15px] font-bold">
-              <span className="flex items-center gap-2">
-                <Icon name="shield" size={20} /> Conformitate și siguranță
-              </span>
-              <Icon name="chevron-down" size={18} className="transition-transform group-open:rotate-180" />
-            </summary>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 px-5 pb-5 text-[14.5px]">
-              <dt className="text-graphite">Marcaj</dt>
-              <dd>{p.ceMarking}</dd>
-              <dt className="text-graphite">Producător / distribuitor</dt>
-              <dd>
-                {p.manufacturer} · {settings.company.address}, {settings.company.city}, România
-              </dd>
-              <dt className="text-graphite">Origine</dt>
-              <dd>{p.countryOfOrigin}</dd>
-              <dt className="text-graphite">Cod model</dt>
-              <dd className="font-mono">{p.modelCode}</dd>
-              <dt className="text-graphite">Contact siguranță</dt>
-              <dd>{settings.company.email}</dd>
-            </dl>
-            <p className="px-5 pb-5 text-[13px] text-graphite">
-              {p.category === 'sun'
-                ? 'Nu sunt potriviți pentru privit direct la soare. Categoria 4 nu este potrivită pentru condus.'
-                : 'Ochelarii cu lentile pe rețetă sunt dispozitive medicale realizate la comandă. Detalii pe pagina '}
-              {p.category === 'sun' ? null : (
-                <Link href="/conformitate" className="text-cobalt underline">
-                  Conformitate
-                </Link>
-              )}
-              {p.category === 'sun' ? null : '.'}
-            </p>
-          </details>
-        </div>
-      </section>
-
-      <div className="mt-28">
-        <Reviews productId={p.id} productName={p.name} reviews={reviews} rating={p.rating} />
-      </div>
-
-      {related.length ? (
-        <section aria-label="Rame similare" className="mt-28">
-          <SectionHead eyebrow="Din aceeași familie de forme" title="Poate îți plac *și acestea.*" action={{ href: base, label: 'Toate modelele' }} />
-          <div className="grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {related.map((r) => (
-              <ProductCard key={r.id} product={r} />
-            ))}
+          <div>
+            <div className="prose-sv">
+              {(p.description ?? '').split('\n\n').map((para) => (
+                <p key={para.slice(0, 24)}>{para}</p>
+              ))}
+            </div>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {p.highlights.map((h) => (
+                <li key={h} className="flex items-center gap-3 rounded-xl bg-glass px-4 py-3 text-[15px] ring-1 ring-line-soft">
+                  <Icon name="check" size={18} className="shrink-0 text-cobalt" /> {h}
+                </li>
+              ))}
+            </ul>
+            <details className="group mt-8 rounded-2xl bg-glass ring-1 ring-line-soft">
+              <summary className="flex items-center justify-between px-5 py-4 text-[15px] font-bold">
+                <span className="flex items-center gap-2">
+                  <Icon name="shield" size={20} /> Conformitate și siguranță
+                </span>
+                <Icon name="chevron-down" size={18} className="transition-transform group-open:rotate-180" />
+              </summary>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 px-5 pb-5 text-[14.5px]">
+                <dt className="text-graphite">Marcaj</dt>
+                <dd>{p.ceMarking}</dd>
+                <dt className="text-graphite">Producător / distribuitor</dt>
+                <dd>
+                  {p.manufacturer} · {settings.company.address}, {settings.company.city}, România
+                </dd>
+                <dt className="text-graphite">Origine</dt>
+                <dd>{p.countryOfOrigin}</dd>
+                <dt className="text-graphite">Cod model</dt>
+                <dd className="font-mono">{p.modelCode}</dd>
+                <dt className="text-graphite">Contact siguranță</dt>
+                <dd>{settings.company.email}</dd>
+              </dl>
+              <p className="px-5 pb-5 text-[13px] text-graphite">
+                {p.category === 'sun'
+                  ? 'Nu sunt potriviți pentru privit direct la soare. Categoria 4 nu este potrivită pentru condus.'
+                  : 'Ochelarii cu lentile pe rețetă sunt dispozitive medicale realizate la comandă. Detalii pe pagina '}
+                {p.category === 'sun' ? null : (
+                  <Link href="/conformitate" className="text-cobalt underline">
+                    Conformitate
+                  </Link>
+                )}
+                {p.category === 'sun' ? null : '.'}
+              </p>
+            </details>
           </div>
         </section>
+      </Suspense>
+
+      <Suspense>
+        <div className="cv-auto mt-28">
+          <Reviews productId={p.id} productName={p.name} reviews={reviews} rating={p.rating} />
+        </div>
+      </Suspense>
+
+      {related.length ? (
+        <Suspense>
+          <section aria-label="Rame similare" className="cv-auto mt-28">
+            <SectionHead eyebrow="Din aceeași familie de forme" title="Poate îți plac *și acestea.*" action={{ href: base, label: 'Toate modelele' }} />
+            <div className="grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+              {related.map((r) => (
+                <ProductCard key={r.id} product={cardView(r)} />
+              ))}
+            </div>
+          </section>
+        </Suspense>
       ) : null}
     </article>
   )

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { ProductCard } from '@/components/shop/product-card'
+import { cardView } from '@/lib/catalog-query'
 import { normalizeSearch } from '@/lib/text'
 import { getCatalog } from '@/server/catalog'
 import { getPublishedPosts } from '@/server/content'
@@ -36,7 +37,7 @@ async function Results({ searchParams }: Pick<PageProps<'/cautare'>, 'searchPara
       <p className="mt-6 text-[15px]"><strong>{products.length}</strong> rame{articles.length ? ` · ${articles.length} ghiduri` : ''}</p>
       {products.length ? (
         <ul className="mt-6 grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((p) => <li key={p.id}><ProductCard product={p} /></li>)}
+          {products.map((p) => <li key={p.id}><ProductCard product={cardView(p)} /></li>)}
         </ul>
       ) : q ? (
         <p className="mt-6 text-graphite">Nicio ramă pentru „{q}”. Încearcă <Link href="/cautare?q=rotunde" className="text-cobalt underline">rotunde</Link>, <Link href="/cautare?q=titan" className="text-cobalt underline">titan</Link> sau <Link href="/rame-de-vedere" className="text-cobalt underline">toate ramele</Link>.</p>
