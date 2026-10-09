@@ -86,7 +86,7 @@ export function ProductEditor({
               <F label="Familie (numele colecției)" error={err('family')} hint={`Nume afișat: ${name}`}>
                 <input value={s.family} onChange={(e) => set('family', e.target.value)} className={field} placeholder="ex. Mira" required />
               </F>
-              <F label="Adresă (slug)" error={err('slug')} hint={`/${s.category === 'sun' ? 'ochelari-de-soare' : 'rame-de-vedere'}/${s.slug || autoSlug}`}>
+              <F label="Adresă (slug)" error={err('slug')} hint={`/rame/${s.slug || autoSlug}`}>
                 <input value={s.slug ?? ''} onChange={(e) => set('slug', slugify(e.target.value))} className={field} placeholder={autoSlug} />
               </F>
               <F label="Categorie">
@@ -275,7 +275,7 @@ export function ProductEditor({
               <F label="Titlu SEO" hint={`${(s.metaTitle || meta.title).length}/60 recomandat`}><input value={s.metaTitle ?? ''} onChange={(e) => set('metaTitle', e.target.value)} className={field} placeholder={meta.title} maxLength={90} /></F>
               <F label="Descriere SEO" hint={`${(s.metaDescription || meta.description).length}/155 recomandat`}><textarea value={s.metaDescription ?? ''} onChange={(e) => set('metaDescription', e.target.value)} rows={3} className="field h-auto py-2.5 text-[14px]" placeholder={meta.description} maxLength={200} /></F>
               <div className="rounded-2xl bg-paper p-4 ring-1 ring-line-soft">
-                <div className="text-[12.5px] text-graphite">sifravision.ro › {s.category === 'sun' ? 'ochelari-de-soare' : 'rame-de-vedere'} › {s.slug || autoSlug}</div>
+                <div className="text-[12.5px] text-graphite">sifravision.ro › rame › {s.slug || autoSlug}</div>
                 <div className="mt-0.5 line-clamp-1 text-[18px] text-[#1a0dab]">{s.metaTitle || meta.title} | Sifra Vision</div>
                 <div className="line-clamp-2 text-[13.5px] text-ink-2">{s.metaDescription || meta.description}</div>
               </div>
@@ -308,7 +308,7 @@ export function ProductEditor({
             </dl>
           </div>
           {!isNew && savedSlug ? (
-            <a href={`/${s.category === 'sun' ? 'ochelari-de-soare' : 'rame-de-vedere'}/${savedSlug}`} target="_blank" className="mt-3 flex items-center justify-center gap-1.5 text-[13.5px] font-bold text-cobalt"><Icon name="external" size={15} /> Vezi pagina din magazin</a>
+            <a href={`/rame/${savedSlug}`} target="_blank" className="mt-3 flex items-center justify-center gap-1.5 text-[13.5px] font-bold text-cobalt"><Icon name="external" size={15} /> Vezi pagina din magazin</a>
           ) : null}
         </aside>
       </div>

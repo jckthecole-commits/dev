@@ -44,6 +44,10 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   reactCompiler: true,
   output: 'standalone',
+  // Fonts read from disk by the generated social images / icons (next/og)
+  outputFileTracingIncludes: {
+    '/**': ['./node_modules/@fontsource/{mona-sans,atkinson-hyperlegible-next,atkinson-hyperlegible-mono}/files/*-latin{,-ext}-{300,400,700,800}-normal.woff'],
+  },
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],

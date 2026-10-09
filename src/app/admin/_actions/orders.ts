@@ -2,12 +2,14 @@
 
 import { eq } from 'drizzle-orm'
 import { refresh, revalidateTag } from 'next/cache'
+import { after } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { order, orderEvent, prescription } from '@/lib/db/schema'
 import { TRANSITIONS, type OrderStatus } from '@/lib/order-status'
 import { audit } from '@/server/audit'
 import { OrderError, transitionOrder } from '@/server/orders'
+import { InvoiceError, issueInvoice, issueInvoiceSafely } from '@/server/invoicing'
 import { requireStaff } from '@/server/session'
 
 type R = { ok: boolean; message?: string; error?: string }
@@ -67,8 +69,21 @@ export async function markPaid(orderId: string): Promise<R> {
   await db.update(order).set({ paymentStatus: 'paid', paidAt: new Date() }).where(eq(order.id, orderId))
   await db.insert(orderEvent).values({ orderId, kind: 'payment', message: 'Plată înregistrată manual', public: true, actorId: me.id, actorName: me.name })
   await audit(me, 'order.paid', 'order', orderId)
+  after(() => issueInvoiceSafely(orderId))
   refresh()
   return { ok: true, message: 'Plată marcată.' }
+}
+
+export async function createInvoice(orderId: string): Promise<R> {
+  const me = await requireStaff('orders:write')
+  try {
+    const inv = await issueInvoice(orderId)
+    await audit(me, 'order.invoice', 'order', orderId, inv)
+    refresh()
+    return { ok: true, message: `Factura ${inv.series}${inv.number} emisă.` }
+  } catch (e) {
+    return { ok: false, error: e instanceof InvoiceError ? e.message : 'Factura nu a putut fi emisă.' }
+  }
 }
 
 const rxSchema = z.object({ status: z.enum(['verified', 'needs_info', 'rejected']), note: z.string().trim().max(1000).optional() })

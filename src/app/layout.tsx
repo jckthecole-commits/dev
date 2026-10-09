@@ -21,7 +21,6 @@ export const metadata: Metadata = {
   openGraph: { type: 'website', locale: 'ro_RO', siteName: 'Sifra Vision' },
   twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true, 'max-image-preview': 'large' },
-  alternates: { canonical: '/' },
 }
 
 export const viewport: Viewport = {

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
-import { addOrderNote, changeOrderStatus, markPaid, reviewPrescription, saveInternalNote, shipOrder } from '@/app/admin/_actions/orders'
+import { addOrderNote, changeOrderStatus, createInvoice, markPaid, reviewPrescription, saveInternalNote, shipOrder } from '@/app/admin/_actions/orders'
 import { ActionButton } from '@/components/admin/action-button'
 import { AdminForm } from '@/components/admin/form'
 import { Badge, Field, input, PageHeader, Panel } from '@/components/admin/ui'
@@ -15,6 +15,7 @@ import { formatDiopter, type RxValues } from '@/lib/optics'
 import { PAYMENT_LABEL, PAYMENT_STATUS_LABEL, SHIPPING_LABEL, STATUS, TRANSITIONS } from '@/lib/order-status'
 import { formatPhone } from '@/lib/ro'
 import { audit } from '@/server/audit'
+import { invoicingEnabled } from '@/server/invoicing'
 import { can, requireStaff } from '@/server/session'
 
 export const metadata = { title: 'Comandă' }
@@ -199,7 +200,13 @@ async function Detail({ params }: Pick<PageProps<'/admin/comenzi/[id]'>, 'params
                 {bill.name}<br />{bill.street}, {bill.city}, {bill.county}
               </div>
             ) : <p className="text-[14px] text-graphite">Ca la livrare</p>}
-            <p className="mt-3 text-[13px] text-graphite">{o.invoiceNumber ? `Factura ${o.invoiceSeries ?? ''}${o.invoiceNumber}` : 'Factura se emite din SmartBill la încasare (vezi Integrări).'}</p>
+            {o.invoiceNumber ? (
+              <p className="mt-3 text-[13.5px]">Factura <strong>{o.invoiceSeries ?? ''}{o.invoiceNumber}</strong>{o.invoiceUrl ? <> · <a href={o.invoiceUrl} target="_blank" rel="noreferrer" className="text-cobalt">PDF</a></> : null}</p>
+            ) : invoicingEnabled() ? (
+              <div className="mt-3"><ActionButton action={createInvoice.bind(null, o.id)} variant="secondary">Emite factura (SmartBill)</ActionButton></div>
+            ) : (
+              <p className="mt-3 text-[13px] text-graphite">Facturare automată neconfigurată — emite factura manual (vezi Lansare & integrări).</p>
+            )}
           </Panel>
           <Panel title="Notă internă">
             <AdminForm action={saveInternalNote.bind(null, o.id)}>

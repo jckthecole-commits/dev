@@ -33,7 +33,7 @@ async function List({ searchParams }: Pick<PageProps<'/admin/recenzii'>, 'search
   const sp = await searchParams
   const tab = TABS.find((t) => t.key === sp.status)?.key ?? 'pending'
   const [rows, counts] = await Promise.all([
-    db.select({ r: review, product: product.name, slug: product.slug, category: product.category }).from(review).innerJoin(product, eq(product.id, review.productId)).where(eq(review.status, tab)).orderBy(desc(review.createdAt)).limit(60),
+    db.select({ r: review, product: product.name, slug: product.slug }).from(review).innerJoin(product, eq(product.id, review.productId)).where(eq(review.status, tab)).orderBy(desc(review.createdAt)).limit(60),
     db.select({ status: review.status, n: sql<number>`count(*)::int` }).from(review).groupBy(review.status),
   ])
   return (
@@ -52,7 +52,7 @@ async function List({ searchParams }: Pick<PageProps<'/admin/recenzii'>, 'search
         <Panel><Empty icon="star" title="Nicio recenzie aici" /></Panel>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
-          {rows.map(({ r, product: pname, slug, category }) => (
+          {rows.map(({ r, product: pname, slug }) => (
             <Panel key={r.id}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -60,7 +60,7 @@ async function List({ searchParams }: Pick<PageProps<'/admin/recenzii'>, 'search
                     <span aria-label={`${r.rating} din 5 stele`} className="font-mono text-[15px] tracking-[0.1em] text-ink">{'★'.repeat(r.rating)}<span className="text-line">{'★'.repeat(5 - r.rating)}</span></span>
                     {r.verifiedPurchase ? <Badge tone="ok">cumpărare verificată</Badge> : <Badge>neverificat</Badge>}
                   </div>
-                  <div className="mt-1 text-[13.5px]"><strong>{r.name}</strong>{r.city ? `, ${r.city}` : ''} · <Link href={`/${category === 'sun' ? 'ochelari-de-soare' : 'rame-de-vedere'}/${slug}#recenzii`} target="_blank" className="text-cobalt">{pname}</Link></div>
+                  <div className="mt-1 text-[13.5px]"><strong>{r.name}</strong>{r.city ? `, ${r.city}` : ''} · <Link href={`/rame/${slug}#recenzii`} target="_blank" className="text-cobalt">{pname}</Link></div>
                 </div>
                 <span className="spec">{formatDateTime(r.createdAt)}</span>
               </div>

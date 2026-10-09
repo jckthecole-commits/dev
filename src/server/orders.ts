@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, ne, sql } from 'drizzle-orm'
 import { revalidateTag } from 'next/cache'
 import { after } from 'next/server'
 import { db } from '@/lib/db'
@@ -12,6 +12,7 @@ import { loadCart } from './cart'
 import { consumeOrder, releaseOrder, reserveLine } from './inventory'
 import { sendMail, staffInbox } from './mail'
 import { emailButton, emailLayout, orderConfirmationEmail } from './mail-templates'
+import { issueInvoiceSafely } from './invoicing'
 import { getSettings } from './settings'
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
@@ -185,6 +186,8 @@ export async function transitionOrder(orderId: string, to: OrderStatus, opts: { 
   if (opts.notify !== false && ['on_hold', 'ready', 'shipped', 'cancelled'].includes(to)) {
     after(() => notifyStatus(o.id))
   }
+  // cash on delivery / in store: the invoice is issued once the money is collected
+  if (to === 'delivered' && o.paymentStatus !== 'paid' && (o.paymentMethod === 'cod' || o.paymentMethod === 'store')) after(() => issueInvoiceSafely(o.id))
   return o
 }
 
@@ -212,9 +215,25 @@ export async function markOrderPaid(orderNumber: string, ref: string | null, pro
   const o = await db.query.order.findFirst({ where: eq(order.number, orderNumber) })
   if (!o || o.paymentStatus === 'paid') return o
   const next: OrderStatus = o.status === 'pending_payment' ? (o.requiresRx ? 'rx_review' : 'placed') : o.status
-  await db.update(order).set({ paymentStatus: 'paid', paidAt: new Date(), paymentRef: ref ?? o.paymentRef, paymentProvider: provider, status: next }).where(eq(order.id, o.id))
+  // conditional update: the IPN and the browser return can race — only one wins
+  const won = await db
+    .update(order)
+    .set({ paymentStatus: 'paid', paidAt: new Date(), paymentRef: ref ?? o.paymentRef, paymentProvider: provider, status: next })
+    .where(and(eq(order.id, o.id), ne(order.paymentStatus, 'paid')))
+    .returning({ id: order.id })
+  if (!won.length) return o
+  if (o.status === 'cancelled') {
+    // paid after the payment window expired (stock already released) → a human decides: refund or reactivate
+    await db.insert(orderEvent).values({ orderId: o.id, kind: 'payment', message: `Plată primită după expirarea comenzii (${provider}) — verifică stocul și reactivează sau rambursează.`, public: false })
+    const staff = staffInbox()
+    if (staff) after(() => sendMail({ to: staff, subject: `Plată întârziată pe comanda anulată ${o.number}`, html: emailLayout({ preheader: o.customerName, title: `Plată pe comanda anulată ${o.number}`, body: `<p>${o.customerName} a plătit după expirarea ferestrei de plată. Stocul a fost eliberat — reactivează comanda sau rambursează plata.</p>` }) }))
+    return o
+  }
   await db.insert(orderEvent).values({ orderId: o.id, kind: 'payment', fromStatus: o.status, toStatus: next, message: `Plată confirmată (${provider})`, public: true })
-  after(() => sendOrderEmails(o.id))
+  after(async () => {
+    await sendOrderEmails(o.id)
+    await issueInvoiceSafely(o.id)
+  })
   return o
 }
 

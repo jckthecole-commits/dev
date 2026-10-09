@@ -11,7 +11,8 @@ import { JsonLd } from '@/components/seo/json-ld'
 import { ProductCard } from '@/components/shop/product-card'
 import type { FrameSpec } from '@/lib/frame-geometry'
 import { artOf } from '@/lib/product-art'
-import { breadcrumbLd, productGroupLd } from '@/lib/seo'
+import { abs, breadcrumbLd, productGroupLd } from '@/lib/seo'
+import { publicUrl } from '@/server/storage'
 import { getApprovedReviews, getCatalog, getProductBySlug, getStaticProductSlugs, getStock } from '@/server/catalog'
 import { getSettings } from '@/server/settings'
 
@@ -101,7 +102,10 @@ export default async function ProductPage({ params }: Pick<PageProps<'/rame/[slu
               templeLength: p.templeLength,
               weightGrams: p.weightGrams,
               price: p.price,
-              variants: variants.map((v) => ({ sku: v.sku, colorName: v.colorName, colorSlug: v.colorSlug, ean: v.ean, available: v.stock.showroom + v.stock.warehouse, priceDelta: v.priceDelta })),
+              variants: variants.map((v) => {
+                const photo = p.images.find((i) => i.kind === 'packshot' && i.variantId === v.id) ?? p.images.find((i) => i.kind === 'packshot' && !i.variantId)
+                return { sku: v.sku, colorName: v.colorName, colorSlug: v.colorSlug, ean: v.ean, available: v.stock.showroom + v.stock.warehouse, priceDelta: v.priceDelta, image: photo ? abs(publicUrl(photo.key)) : undefined }
+              }),
               rating: p.rating,
             },
             settings,

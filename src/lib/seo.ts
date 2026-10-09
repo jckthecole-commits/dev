@@ -6,6 +6,9 @@ export const abs = (path: string) => (path.startsWith('http') ? path : `${SITE_U
 
 const DAY_SCHEMA = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+/** Stable, square product image (procedural packshot) — used when no photo was uploaded. */
+export const frameImageUrl = (slug: string, colorSlug: string) => abs(`/imagini/rame/${slug}/${colorSlug}.png`)
+
 export function organizationLd(s: StoreSettings) {
   const sameAs = Object.values(s.company.social).filter(Boolean)
   return {
@@ -111,7 +114,7 @@ export type ProductLdInput = {
   templeLength: number
   weightGrams: number | null
   price: number
-  variants: { sku: string; colorName: string; colorSlug: string; ean: string | null; available: number; priceDelta: number }[]
+  variants: { sku: string; colorName: string; colorSlug: string; ean: string | null; available: number; priceDelta: number; image?: string }[]
   rating: { count: number; avg: number | null }
 }
 
@@ -168,7 +171,7 @@ export function productGroupLd(p: ProductLdInput, s: StoreSettings) {
       ...(v.ean ? { gtin13: v.ean } : {}),
       mpn: v.sku,
       color: v.colorName,
-      image: abs(`/rame/${p.slug}/opengraph-image`),
+      image: v.image ?? frameImageUrl(p.slug, v.colorSlug),
       ...(p.weightGrams ? { weight: { '@type': 'QuantitativeValue', value: p.weightGrams, unitCode: 'GRM' } } : {}),
       offers: {
         '@type': 'Offer',
