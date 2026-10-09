@@ -5,11 +5,11 @@ import { refresh, updateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { faq, post } from '@/lib/db/schema'
+import { document as documentTable, faq, post } from '@/lib/db/schema'
 import { plainText, slugify } from '@/lib/text'
 import { audit } from '@/server/audit'
 import { requireStaff } from '@/server/session'
-import { deleteObject, storePublicFile } from '@/server/storage'
+import { deleteObject, storeDocument, storePublicFile } from '@/server/storage'
 
 type R = { ok: boolean; message?: string; error?: string; fieldErrors?: Record<string, string> }
 const RESERVED = new Set(['admin', 'api', 'cont', 'cos', 'checkout', 'comanda', 'rame', 'rame-de-vedere', 'ochelari-de-soare', 'jurnal', 'ghid', 'b2b', 'programare', 'proba-virtuala', 'cautare', 'favorite', 'media', 'feeds', 'plata', 'contact', 'lentile', 'newsletter', 'conformitate', 'showroom-galati', 'intrebari-frecvente'])
@@ -118,6 +118,45 @@ export async function deleteFaq(id: string): Promise<R> {
   await db.delete(faq).where(eq(faq.id, id))
   await audit(me, 'faq.delete', 'faq', id)
   updateTag('faqs')
+  refresh()
+  return { ok: true }
+}
+
+/* ── Documents (conformity declarations, price lists, catalogues) ───────── */
+
+const docInput = z.object({
+  title: z.string().trim().min(3, 'Titlul documentului').max(140),
+  kind: z.enum(['conformity', 'catalog', 'pricelist', 'certificate', 'other']),
+  audience: z.enum(['public', 'b2b', 'internal']),
+  productId: z.string().uuid().optional().or(z.literal('')),
+})
+
+export async function uploadDocument(_: unknown, fd: FormData): Promise<R> {
+  const me = await requireStaff('content:write')
+  const d = docInput.safeParse(Object.fromEntries([...fd.entries()].filter(([, v]) => typeof v === 'string')))
+  if (!d.success) return { ok: false, error: 'Verifică câmpurile.', fieldErrors: Object.fromEntries(d.error.issues.map((i) => [String(i.path[0]), i.message])) }
+  const file = fd.get('file')
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'Alege fișierul.' }
+  let stored
+  try {
+    stored = await storeDocument(file)
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Încărcarea a eșuat.' }
+  }
+  const [row] = await db.insert(documentTable).values({ title: d.data.title, kind: d.data.kind, audience: d.data.audience, productId: d.data.productId || null, fileKey: stored.key, fileName: file.name.slice(0, 120), mime: stored.mime, size: stored.size }).returning({ id: documentTable.id })
+  await audit(me, 'document.upload', 'document', row!.id, { audience: d.data.audience })
+  updateTag('documents')
+  refresh()
+  return { ok: true, message: 'Document încărcat.' }
+}
+
+export async function deleteDocument(id: string): Promise<R> {
+  const me = await requireStaff('content:write')
+  const [doc] = await db.delete(documentTable).where(eq(documentTable.id, id)).returning()
+  if (!doc) return { ok: false, error: 'Nu există.' }
+  await deleteObject(doc.fileKey).catch(() => {})
+  await audit(me, 'document.delete', 'document', id, { title: doc.title })
+  updateTag('documents')
   refresh()
   return { ok: true }
 }

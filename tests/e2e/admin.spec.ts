@@ -32,6 +32,27 @@ test.describe('admin', () => {
     await expect(page.getByText('A între 38 și 66 mm').first()).toBeVisible()
   })
 
+  test('documents: public ones reach the compliance page, B2B ones stay private', async ({ page, request }) => {
+    const pdf = Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n')
+    const upload = async (title: string, audience: string) => {
+      await open(page, '/admin/continut?tip=documente')
+      await page.locator('input[name=title]').fill(title)
+      await page.locator('select[name=audience]').selectOption(audience)
+      await page.locator('input[name=file]').setInputFiles({ name: 'declaratie.pdf', mimeType: 'application/pdf', buffer: pdf })
+      await page.getByRole('button', { name: 'Încarcă' }).click()
+      await expect(page.getByRole('link', { name: title })).toBeVisible()
+      return page.getByRole('link', { name: title }).getAttribute('href')
+    }
+    const stamp = Date.now().toString(36)
+    const pub = await upload(`Declarație test ${stamp}`, 'public')
+    const b2b = await upload(`Listă prețuri test ${stamp}`, 'b2b')
+    expect((await request.get(pub!)).headers()['content-type']).toBe('application/pdf')
+    await open(page, '/conformitate')
+    await expect(page.getByRole('link', { name: new RegExp(`Declarație test ${stamp}`) })).toBeVisible()
+    const res = await page.context().browser()!.newContext().then(async (c) => { const r = await c.request.get(new URL(b2b!, page.url()).toString()); await c.close(); return r.status() })
+    expect(res).toBe(401)
+  })
+
   test('customers cannot open the admin', async ({ browser, baseURL }) => {
     const ctx = await browser.newContext({ baseURL })
     const p = await ctx.newPage()

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Icon, type IconName } from '@/components/icons'
+import { getPublicDocuments } from '@/server/content'
 import { getSettings } from '@/server/settings'
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CompliancePage() {
-  const s = await getSettings()
+  const [s, docs] = await Promise.all([getSettings(), getPublicDocuments()])
   const items: [IconName, string, string][] = [
     ['shield', 'Dispozitive medicale clasa I', 'Ramele de vedere și lentilele corective sunt dispozitive medicale conform Regulamentului (UE) 2017/745 (MDR). Lucrăm doar cu producători care emit declarație de conformitate UE și marcaj CE.'],
     ['eye', 'Rețeta, verificată de optometrist', `Fiecare comandă cu dioptrii e verificată înainte de montaj${s.company.optometrist ? ` de ${s.company.optometrist}` : ' de optometristul nostru'}: coerența valorilor, PD-ul față de ramă, înălțimea de montaj la progresive.`],
@@ -42,6 +43,17 @@ export default async function CompliancePage() {
         </dl>
         <div className="text-[15px] text-ink-2">
           <p>Declarațiile de conformitate pentru fiecare model sunt disponibile la cerere, iar partenerii B2B le descarcă direct din portal.</p>
+          {docs.length ? (
+            <ul className="mt-4 flex flex-col gap-2">
+              {docs.map((d) => (
+                <li key={d.id}>
+                  <a href={`/api/private/document/${d.id}`} className="inline-flex items-center gap-2 font-bold text-ink no-underline hover:underline">
+                    <Icon name="file" size={18} /> {d.title} <span className="font-mono text-[12px] font-normal text-graphite">{Math.max(1, Math.round(d.size / 1024))} KB</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <Link href="/contact" className="mt-4 inline-flex items-center gap-1.5 font-bold text-cobalt no-underline hover:underline">Cere o declarație <Icon name="arrow-right" size={16} /></Link>
         </div>
       </div>

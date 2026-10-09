@@ -2,7 +2,7 @@ import 'server-only'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
 import { db } from '@/lib/db'
-import { faq, post } from '@/lib/db/schema'
+import { document, faq, post } from '@/lib/db/schema'
 import { formatPrice } from '@/lib/format'
 import { interpolate } from '@/lib/markdown'
 import { getLensCatalog } from './catalog'
@@ -56,4 +56,12 @@ async function resolvePlaceholders(body: string) {
     price: Object.fromEntries(lenses.treatments.map((t) => [t.code, formatPrice(t.price)])),
   }
   return interpolate(body, ctx)
+}
+
+/** Documents anyone may download (declarations of conformity, certificates). */
+export async function getPublicDocuments() {
+  'use cache'
+  cacheTag('documents')
+  cacheLife('hours')
+  return db.select({ id: document.id, title: document.title, kind: document.kind, size: document.size }).from(document).where(eq(document.audience, 'public')).orderBy(asc(document.title))
 }

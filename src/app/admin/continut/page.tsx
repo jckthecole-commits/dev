@@ -1,13 +1,13 @@
 import { asc, desc, eq, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { deleteFaq, saveFaq } from '@/app/admin/_actions/content'
+import { deleteDocument, deleteFaq, saveFaq, uploadDocument } from '@/app/admin/_actions/content'
 import { ActionButton } from '@/components/admin/action-button'
 import { AdminForm } from '@/components/admin/form'
 import { Badge, Empty, Field, input, PageHeader, Panel, Table } from '@/components/admin/ui'
 import { Icon } from '@/components/icons'
 import { db } from '@/lib/db'
-import { faq, post } from '@/lib/db/schema'
+import { document, faq, post, product } from '@/lib/db/schema'
 import { formatDate } from '@/lib/format'
 import { can, requireStaff } from '@/server/session'
 
@@ -25,21 +25,23 @@ async function List({ searchParams }: Pick<PageProps<'/admin/continut'>, 'search
   const me = await requireStaff('orders:read')
   const writable = can(me.role, 'content:write')
   const sp = await searchParams
-  const tip = sp.tip === 'page' ? 'page' : sp.tip === 'faq' ? 'faq' : 'article'
+  const tip = sp.tip === 'page' ? 'page' : sp.tip === 'faq' ? 'faq' : sp.tip === 'documente' ? 'documente' : 'article'
   const counts = await db.select({ kind: post.kind, n: sql<number>`count(*)::int` }).from(post).groupBy(post.kind)
   const faqCount = await db.select({ n: sql<number>`count(*)::int` }).from(faq)
+  const docCount = await db.select({ n: sql<number>`count(*)::int` }).from(document)
   const tabs: [string, string, number][] = [
     ['article', 'Jurnal & ghiduri', counts.find((c) => c.kind === 'article')?.n ?? 0],
     ['page', 'Pagini', counts.find((c) => c.kind === 'page')?.n ?? 0],
     ['faq', 'Întrebări frecvente', faqCount[0]?.n ?? 0],
+    ['documente', 'Documente', docCount[0]?.n ?? 0],
   ]
   return (
     <>
-      <PageHeader eyebrow="Conținut" title="Pagini & jurnal" actions={writable && tip !== 'faq' ? <Link href={`/admin/continut/nou?tip=${tip}`} className="btn btn-primary btn-sm"><Icon name="plus" size={16} /> {tip === 'page' ? 'Pagină nouă' : 'Articol nou'}</Link> : null} />
+      <PageHeader eyebrow="Conținut" title="Pagini & jurnal" actions={writable && (tip === 'article' || tip === 'page') ? <Link href={`/admin/continut/nou?tip=${tip}`} className="btn btn-primary btn-sm"><Icon name="plus" size={16} /> {tip === 'page' ? 'Pagină nouă' : 'Articol nou'}</Link> : null} />
       <nav aria-label="Tip conținut" className="mb-6 flex flex-wrap gap-2">
         {tabs.map(([k, l, n]) => <Link key={k} href={`/admin/continut?tip=${k}`} aria-current={tip === k ? 'page' : undefined} className="tab-pill">{l} <span className="ml-1 font-mono text-[12px] opacity-70">{n}</span></Link>)}
       </nav>
-      {tip === 'faq' ? <Faqs writable={writable} /> : <Posts kind={tip} />}
+      {tip === 'faq' ? <Faqs writable={writable} /> : tip === 'documente' ? <Documents writable={writable} /> : <Posts kind={tip} />}
     </>
   )
 }
@@ -100,6 +102,53 @@ async function Faqs({ writable }: { writable: boolean }) {
             </li>
           ))}
         </ul>
+      </Panel>
+    </div>
+  )
+}
+
+const DOC_KIND: Record<string, string> = { conformity: 'Declarație de conformitate', catalog: 'Catalog', pricelist: 'Listă de prețuri', certificate: 'Certificat', other: 'Altul' }
+const DOC_AUDIENCE: Record<string, string> = { public: 'public', b2b: 'parteneri B2B', internal: 'intern' }
+
+async function Documents({ writable }: { writable: boolean }) {
+  const [rows, products] = await Promise.all([
+    db.select({ d: document, product: product.name }).from(document).leftJoin(product, eq(product.id, document.productId)).orderBy(desc(document.createdAt)),
+    db.select({ id: product.id, name: product.name }).from(product).orderBy(asc(product.name)),
+  ])
+  return (
+    <div className="flex flex-col gap-6">
+      {writable ? (
+        <Panel title="Document nou">
+          <AdminForm action={uploadDocument} submit="Încarcă">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Field label="Titlu" className="sm:col-span-2"><input name="title" className={input} placeholder="ex. Declarație de conformitate UE — rame acetat 2026" /></Field>
+              <Field label="Tip"><select name="kind" className={input}>{Object.entries(DOC_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
+              <Field label="Cine îl vede" hint="Publicul îl găsește pe pagina de conformitate"><select name="audience" defaultValue="b2b" className={input}>{Object.entries(DOC_AUDIENCE).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
+              <Field label="Produs (opțional)" className="sm:col-span-2"><select name="productId" className={input}><option value="">Toate / niciunul</option>{products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
+              <Field label="Fișier" hint="PDF, JPG, PNG, XLSX, DOCX sau CSV · max. 20 MB · stocat criptat" className="sm:col-span-2"><input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.docx,.csv" className="text-[14px] file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-[13px] file:font-bold file:text-fog" /></Field>
+            </div>
+          </AdminForm>
+        </Panel>
+      ) : null}
+      <Panel pad={false}>
+        {rows.length ? (
+          <Table>
+            <thead><tr><th>Document</th><th>Tip</th><th>Vizibil pentru</th><th>Încărcat</th>{writable ? <th /> : null}</tr></thead>
+            <tbody>
+              {rows.map(({ d, product: pname }) => (
+                <tr key={d.id}>
+                  <td><a href={`/api/private/document/${d.id}`} target="_blank" className="font-bold text-ink no-underline hover:underline">{d.title}</a><div className="spec">{d.fileName} · {Math.max(1, Math.round(d.size / 1024))} KB{pname ? ` · ${pname}` : ''}</div></td>
+                  <td className="text-[13.5px]">{DOC_KIND[d.kind] ?? d.kind}</td>
+                  <td><Badge tone={d.audience === 'public' ? 'ok' : d.audience === 'b2b' ? 'info' : 'neutral'}>{DOC_AUDIENCE[d.audience] ?? d.audience}</Badge></td>
+                  <td className="text-[13.5px]">{formatDate(d.createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  {writable ? <td className="text-right"><ActionButton action={deleteDocument.bind(null, d.id)} variant="ghost" confirm={`Ștergi „${d.title}”?`}><Icon name="trash" size={14} /></ActionButton></td> : null}
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        ) : (
+          <Empty icon="file" title="Niciun document">Declarațiile de conformitate, cataloagele și listele de prețuri pentru parteneri se încarcă aici.</Empty>
+        )}
       </Panel>
     </div>
   )

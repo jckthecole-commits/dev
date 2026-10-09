@@ -38,7 +38,8 @@ test('configurator → cart → checkout with cash on delivery', async ({ page }
   await page.getByLabel('SPH OS').selectOption('-2')
   await page.getByRole('button', { name: 'Adaugă în coș' }).click()
   await page.waitForURL('**/cos**')
-  await expect(page.getByText('Rețetă completată')).toBeVisible()
+  await page.waitForLoadState('networkidle')
+  await expect(page.getByText('Rețetă completată').first()).toBeVisible()
   await page.getByRole('link', { name: /Finalizează comanda/ }).click()
   await page.waitForURL('**/checkout')
   await page.locator('#f-firstName').fill('Ana')
@@ -53,7 +54,8 @@ test('configurator → cart → checkout with cash on delivery', async ({ page }
   await page.locator('input[name=healthConsent]').check({ force: true })
   await page.getByRole('button', { name: 'Plasează comanda' }).click()
   await page.waitForURL('**/comanda/**')
-  await expect(page.getByText('Mulțumim, Ana!')).toBeVisible()
+  await page.waitForLoadState('networkidle')
+  await expect(page.getByRole('heading', { name: /Mulțumim, Ana!/ })).toBeVisible()
 })
 
 test('checkout refuses an order without accepting the terms', async ({ page }) => {

@@ -115,6 +115,27 @@ export async function readPrivateFile(key: string): Promise<Buffer | null> {
   return blob ? decryptBuffer(blob) : null
 }
 
+const DOC_TYPES: Record<string, { mime: string; magic?: (b: Buffer) => boolean }> = {
+  pdf: { mime: 'application/pdf', magic: (b) => b.subarray(0, 5).toString() === '%PDF-' },
+  jpg: { mime: 'image/jpeg', magic: (b) => b[0] === 0xff && b[1] === 0xd8 },
+  png: { mime: 'image/png', magic: (b) => b[0] === 0x89 && b.subarray(1, 4).toString() === 'PNG' },
+  xlsx: { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', magic: (b) => b.subarray(0, 4).toString('hex') === '504b0304' },
+  docx: { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', magic: (b) => b.subarray(0, 4).toString('hex') === '504b0304' },
+  csv: { mime: 'text/csv', magic: (b) => !b.includes(0) },
+}
+
+/** Business documents (declarations of conformity, price lists, catalogues) — encrypted, served through an access-checked route. */
+export async function storeDocument(file: File) {
+  if (file.size > 20 * 1024 * 1024) throw new Error('Fișierul depășește 20 MB.')
+  const ext = (file.name.split('.').pop() ?? '').toLowerCase().replace('jpeg', 'jpg')
+  const type = DOC_TYPES[ext]
+  const buf = Buffer.from(await file.arrayBuffer())
+  if (!type || !type.magic?.(buf)) throw new Error('Acceptăm PDF, JPG, PNG, XLSX, DOCX sau CSV.')
+  const key = `private/documents/${randomToken(16)}.enc`
+  await putObject(key, encryptBuffer(buf), 'application/octet-stream')
+  return { key, mime: type.mime, size: buf.length, ext }
+}
+
 /** Public URL for a stored public object (served by /media/[...key] or a CDN). */
 export function publicUrl(key: string) {
   if (process.env.NEXT_PUBLIC_MEDIA_BASE_URL) return `${process.env.NEXT_PUBLIC_MEDIA_BASE_URL.replace(/\/$/, '')}/${key}`
