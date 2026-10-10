@@ -45,7 +45,7 @@ Magazin online, configurator de lentile, probă virtuală, programări, portal B
 | Plăți | Netopia Payments API v2 (IPN semnat JWT RS512), Stripe Checkout |
 | Facturare | SmartBill Cloud → e-Factura (SPV) |
 | Fișiere | disc local sau S3 / Cloudflare R2; rețetele criptate AES-256-GCM |
-| Teste | Vitest (unitare), Playwright (end-to-end, desktop + mobil) |
+| Teste | Vitest (unitare + integrare pe PostgreSQL real), Playwright (end-to-end, desktop + mobil) |
 
 ## Pornire locală
 
@@ -76,6 +76,7 @@ Fără SMTP configurat, e-mailurile se salvează în `.data/outbox/*.html`; făr
 | `pnpm dev` / `build` / `start` | dezvoltare, build de producție, server de producție |
 | `pnpm check` | typecheck + lint + teste unitare |
 | `pnpm test` | teste unitare (optică, prețuri, programări, validări RO, catalog) |
+| `pnpm test:integration` | teste de integrare: Server Actions, rute API, plăți, stoc, permisiuni — pe o bază de test separată (`TEST_DATABASE_URL`, implicit `sifra_test`, creată, migrată și populată automat) |
 | `pnpm e2e` | teste end-to-end (Playwright) pe aplicația pornită, cu datele demo |
 | `pnpm db:migrate` / `db:seed` / `db:seed:demo` | migrații, date de bază, date demo |
 | `pnpm db:reset:demo` | șterge baza locală și o reface cu date demo (refuză în producție) |
@@ -201,5 +202,5 @@ src/
   lib/               logică pură, testată: optică, prețuri, programări, geometria ramelor, filtre, validări RO
   server/            acces la date și integrări (comenzi, stoc, e-mail, plăți, facturare, stocare, GDPR)
 scripts/             migrații, seed, creare admin, copiere runtime MediaPipe
-tests/unit, tests/e2e
+tests/unit, tests/integration, tests/e2e
 ```
