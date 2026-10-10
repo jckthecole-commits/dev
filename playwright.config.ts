@@ -3,7 +3,8 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * End-to-end tests against a running app with the demo seed
  * (`pnpm db:reset` or `pnpm db:seed` with SEED_DEMO=1).
- * Locally: `pnpm dev` in another terminal, then `pnpm e2e`.
+ * Locally: `pnpm dev` in another terminal, then `pnpm e2e` — or `E2E_PROD=1 pnpm e2e`
+ * after `pnpm build` to have Playwright start (and stop) the production server.
  * CI: builds and starts the production server via `webServer`.
  */
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
@@ -35,5 +36,5 @@ export default defineConfig({
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined
-    : { command: process.env.CI ? 'pnpm start' : 'pnpm dev', url: baseURL, reuseExistingServer: true, timeout: 180_000 },
+    : { command: process.env.CI || process.env.E2E_PROD ? 'pnpm start' : 'pnpm dev', url: baseURL, reuseExistingServer: true, timeout: 180_000 },
 })
