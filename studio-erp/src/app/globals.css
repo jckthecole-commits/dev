@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+
+/* Colour tokens: dark by default (night shifts, dim rooms), light when the device asks for it. */
+:root {
+  --bg: #121316;
+  --panel: #1a1c20;
+  --panel-2: #22252a;
+  --line: #2e3238;
+  --text: #e9eaec;
+  --muted: #9aa0a8;
+  --accent: #e8a33d;
+  --accent-ink: #1a1305;
+  --good: #4cc38a;
+  --bad: #f2555a;
+  --info: #5aa9f0;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f4f2;
+    --panel: #ffffff;
+    --panel-2: #f0f0ed;
+    --line: #dcdcd7;
+    --text: #1b1c1e;
+    --muted: #63676d;
+    --accent: #b86e08;
+    --accent-ink: #ffffff;
+    --good: #18794e;
+    --bad: #c62a2f;
+    --info: #1f6fc5;
+    color-scheme: light;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --color-info: var(--info);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media print {
+  :root {
+    --bg: #fff;
+    --panel: #fff;
+    --panel-2: #fff;
+    --line: #ccc;
+    --text: #000;
+    --muted: #444;
+    color-scheme: light;
+  }
+}

@@ -5,7 +5,7 @@ const config = [
   ...next,
   ...nextTs,
   {
-    ignores: ['.next/**', 'node_modules/**', 'drizzle/**', 'next-env.d.ts', 'public/**', '.tmp/**', '.data/**', 'storage/**'],
+    ignores: ['studio-erp/**', '.next/**', 'node_modules/**', 'drizzle/**', 'next-env.d.ts', 'public/**', '.tmp/**', '.data/**', 'storage/**'],
   },
   {
     rules: {

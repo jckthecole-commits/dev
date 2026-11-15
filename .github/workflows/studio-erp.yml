@@ -1,0 +1,33 @@
+name: Studio ERP
+
+on:
+  push:
+    branches: [main]
+    paths: ['studio-erp/**', '.github/workflows/studio-erp.yml']
+  pull_request:
+    paths: ['studio-erp/**', '.github/workflows/studio-erp.yml']
+
+concurrency:
+  group: studio-erp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: studio-erp
+    env:
+      # build only needs a syntactically valid URL; no database is contacted
+      DATABASE_URL: postgres://studio:studio@localhost:5432/studio
+      BETTER_AUTH_SECRET: ci-only-secret-not-for-production-0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: studio-erp/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version-file: studio-erp/.nvmrc, cache: pnpm, cache-dependency-path: studio-erp/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm build
